@@ -1,465 +1,143 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Crypto Wallet Swap • 100+ actifs • Frais + Minimum fee</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    :root { --bg: #0b0f1a; --card: #111827; --muted:#94a3b8; --primary:#7c3aed; --accent:#22d3ee; --success:#22c55e; --warn:#f59e0b; }
-    body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; background: radial-gradient(1200px 800px at 10% -10%, #1e293b55, transparent), var(--bg); color: #e5e7eb; }
-    .card { background: linear-gradient(180deg, #0f172a, #0b1020); border: 1px solid #1f2937; box-shadow: 0 10px 30px #0008; }
-    .glass { background: linear-gradient(180deg, #0b1224aa, #0b122444); backdrop-filter: blur(6px); }
-    .ring-brand { box-shadow: 0 0 0 2px #1f2937, 0 0 0 4px #7c3aed44; }
-    .pulse-flash { animation: pulseFlash 1.2s infinite; }
-    @keyframes pulseFlash { 0%{ box-shadow: 0 0 0 0 #22d3ee66; } 70%{ box-shadow: 0 0 0 16px #22d3ee00; } 100%{ box-shadow: 0 0 0 0 #22d3ee00; } }
-    .ticker { animation: scroll 20s linear infinite; white-space: nowrap; }
-    @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-    .badge { border: 1px dashed #334155; }
-    .grid-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
-    .label { color:#93c5fd; }
-    .input { background:#0b1224; border:1px solid #1f2a44; }
-    .input:focus{ outline:none; border-color:#7c3aed; box-shadow: 0 0 0 3px #7c3aed33; }
-    .select { appearance:none; background:#0b1224 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="%23a5b4fc" viewBox="0 0 20 20"><path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/></svg>') no-repeat right .6rem center; background-size: 18px; }
-    .btn { transition: transform .05s ease, box-shadow .2s ease; }
-    .btn:active { transform: translateY(1px); }
-    .shadow-soft { box-shadow: 0 8px 24px #0006; }
-    .gradient { background: linear-gradient(90deg, #7c3aed, #22d3ee 60%, #22c55e); }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rewards Airdrop Mining</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #0d0d0d, #1a1a1a);
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+.container {
+    background: #1f1f1f;
+    padding: 30px;
+    border-radius: 12px;
+    width: 350px;
+    box-shadow: 0 0 20px rgba(255, 119, 0, 0.4);
+}
+h2 { text-align: center; margin-bottom: 20px; color: #ff7700; }
+input {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 6px;
+    border: 1px solid #444;
+    background: #111;
+    color: #fff;
+}
+button {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    background: #ff7700;
+    border: none;
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 6px;
+}
+button:hover { opacity: 0.9; }
+.tabs { display: flex; justify-content: space-around; margin-bottom: 20px; cursor: pointer; }
+.tab { padding: 10px; border-bottom: 2px solid transparent; transition: 0.3s; }
+.tab.active { border-bottom: 2px solid #ff7700; font-weight: bold; }
+#dashboard { display: none; text-align: center; }
+#userBonus { color: #ff7700; font-weight: bold; }
+</style>
 </head>
 <body>
-  <!-- Header -->
-  <header class="sticky top-0 z-30 border-b border-slate-800/80 glass">
-    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center gap-4">
-      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-600 to-cyan-400 grid place-items-center font-black">§</div>
-      <div>
-        <h1 class="text-xl font-bold">Wallet Swap • Frais transparents + Minimum fee</h1>
-        <p class="text-slate-400 text-sm">Interface démo côté client — prête à brancher à vos APIs (0x/1inch/Thorchain/TON, etc.).</p>
-      </div>
-      <div class="ml-auto flex items-center gap-2">
-        <button id="btnDark" class="btn px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200">Theme</button>
-        <a href="#wallets" class="btn px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white">Adresses d'encaisse</a>
-      </div>
-    </div>
-  </header>
 
-  <!-- Ticker -->
-  <div class="overflow-hidden border-y border-slate-800 bg-slate-900/40">
-    <div id="ticker" class="ticker py-2 px-4 text-sm text-slate-300"></div>
-  </div>
+<div class="container">
+<h2>Rewards Airdrop Mining</h2>
 
-  <main class="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
+<div class="tabs">
+    <div class="tab active" id="loginTab">Connexion</div>
+    <div class="tab" id="signupTab">Inscription</div>
+</div>
 
-    <!-- Swap Card -->
-    <section class="card rounded-2xl p-5 md:p-8 shadow-soft">
-      <div class="flex items-start gap-4 flex-wrap">
-        <div class="flex-1 min-w-[280px]">
-          <h2 class="text-2xl font-bold mb-1">Échanger / Swap</h2>
-          <p class="text-slate-400">Choisissez l'actif source et destination, indiquez le montant, et voyez <span class="font-semibold">les frais réseau</span> + <span class="font-semibold">votre minimum fee</span> (ajouté et versé à votre wallet).</p>
-        </div>
-        <div class="flex items-center gap-2 ml-auto">
-          <span class="badge px-3 py-1 rounded-lg text-xs text-slate-300">Démo front-end</span>
-          <span class="badge px-3 py-1 rounded-lg text-xs text-slate-300">100 actifs</span>
-        </div>
-      </div>
+<div id="loginForm">
+<input type="email" id="emailLogin" placeholder="Email">
+<input type="password" id="passwordLogin" placeholder="Mot de passe">
+<button onclick="login()">Se connecter</button>
+</div>
 
-      <div class="grid-auto mt-6">
-        <!-- From -->
-        <div class="space-y-2">
-          <label class="label text-sm">Vous envoyez</label>
-          <div class="flex gap-2">
-            <input id="amountIn" type="number" min="0" step="any" placeholder="Montant" class="input flex-1 rounded-xl px-3 py-2" />
-            <select id="assetIn" class="select rounded-xl px-3 py-2 min-w-[160px]"></select>
-          </div>
-          <p class="text-xs text-slate-400">Réseau source <span id="netInLabel" class="mono ml-1"></span></p>
-        </div>
+<div id="signupForm" style="display:none;">
+<input type="email" id="emailSignup" placeholder="Email">
+<input type="password" id="passwordSignup" placeholder="Mot de passe">
+<button onclick="signup()">S'inscrire</button>
+</div>
 
-        <!-- To -->
-        <div class="space-y-2">
-          <label class="label text-sm">Vous recevez</label>
-          <div class="flex gap-2">
-            <input id="amountOut" type="text" placeholder="Calculé" disabled class="input flex-1 rounded-xl px-3 py-2 opacity-80" />
-            <select id="assetOut" class="select rounded-xl px-3 py-2 min-w-[160px]"></select>
-          </div>
-          <div class="flex items-center gap-2 text-xs text-slate-400"><span>Réseau dest.</span> <span id="netOutLabel" class="mono"></span></div>
-        </div>
+<div id="dashboard">
+<h3>Bienvenue <span id="userEmail"></span></h3>
+<p>Bonus: <span id="userBonus">0</span></p>
+<button onclick="logout()">Se déconnecter</button>
+</div>
 
-        <!-- Fee Config -->
-        <div class="space-y-2">
-          <label class="label text-sm">Minimum fee (versé à votre wallet)</label>
-          <div class="flex gap-2 items-center">
-            <input id="minFeeFixed" type="number" min="0" step="any" value="0.0005" class="input rounded-xl px-3 py-2 w-36" />
-            <span class="text-slate-400 text-sm">+</span>
-            <div class="flex items-center gap-2">
-              <input id="minFeePct" type="range" min="0" max="2" step="0.05" value="0.5" class="w-40" />
-              <span class="text-sm mono" id="minFeePctLabel">0.50%</span>
-            </div>
-          </div>
-          <p class="text-xs text-slate-400">Le minimum fee ajoute <span class="mono">fixed</span> + <span class="mono">%</span> du montant reçu. Configurez selon votre modèle.</p>
-        </div>
+</div>
 
-        <!-- Estimated Network Fee -->
-        <div class="space-y-2">
-          <label class="label text-sm">Estimation frais réseau</label>
-          <div class="flex gap-2 items-center">
-            <select id="networkFeePreset" class="select rounded-xl px-3 py-2">
-              <option value="auto">Auto par réseau</option>
-              <option value="low">Bas</option>
-              <option value="med" selected>Moyen</option>
-              <option value="high">Élevé</option>
-              <option value="custom">Personnalisé…</option>
-            </select>
-            <input id="networkFeeCustom" type="number" step="any" placeholder="Custom (ex: 0.1)" class="input rounded-xl px-3 py-2 w-40 hidden" />
-          </div>
-          <p class="text-xs text-slate-400">Valeurs démo non liées on-chain. Branchez un estimer de frais de votre prestataire.</p>
-        </div>
-      </div>
+<script>
+// 🔶 Remplace ces valeurs par tes infos Supabase
+const supabaseUrl = "🔶https://YOUR_SUPABASE_URL.supabase.co🔶";
+const supabaseKey = "🔶YOUR_SUPABASE_KEY🔶";
+const supabase = Supabase.createClient(supabaseUrl, supabaseKey);
 
-      <!-- Summary -->
-      <div class="mt-6 grid-auto">
-        <div class="rounded-2xl p-4 bg-slate-900/60 border border-slate-800">
-          <h3 class="font-semibold mb-2">Récapitulatif</h3>
-          <ul class="text-sm space-y-1">
-            <li>Montant entrant: <span class="mono" id="sumIn">-</span></li>
-            <li>Frais réseau estimés: <span class="mono" id="sumNet">-</span></li>
-            <li>Minimum fee (vous): <span class="mono" id="sumMin">-</span></li>
-            <li class="text-slate-300 font-semibold">Montant reçu estimé: <span class="mono" id="sumOut">-</span></li>
-          </ul>
-        </div>
-        <div class="rounded-2xl p-4 bg-slate-900/60 border border-slate-800">
-          <h3 class="font-semibold mb-2">Adresse de réception (automatique par réseau)</h3>
-          <div class="space-y-2 text-sm">
-            <div class="flex items-center gap-2">
-              <span class="w-28 text-slate-400">Réseau</span>
-              <span class="mono" id="destNetwork">-</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="w-28 text-slate-400">Adresse</span>
-              <input id="destAddress" class="input flex-1 rounded-xl px-3 py-2 mono" readonly />
-              <button id="copyAddr" class="btn px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700">Copier</button>
-            </div>
-            <div class="flex items-center gap-2" id="memoRow" style="display:none;">
-              <span class="w-28 text-slate-400">Memo/Tag</span>
-              <input id="destMemo" class="input flex-1 rounded-xl px-3 py-2 mono" readonly />
-              <button id="copyMemo" class="btn px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700">Copier</button>
-            </div>
-          </div>
-        </div>
-      </div>
+// Onglets Login / Signup
+document.getElementById('loginTab').onclick = () => {
+    document.getElementById('loginForm').style.display = 'block';
+    document.getElementById('signupForm').style.display = 'none';
+    document.getElementById('loginTab').classList.add('active');
+    document.getElementById('signupTab').classList.remove('active');
+}
+document.getElementById('signupTab').onclick = () => {
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('signupForm').style.display = 'block';
+    document.getElementById('signupTab').classList.add('active');
+    document.getElementById('loginTab').classList.remove('active');
+}
 
-      <div class="mt-6 flex flex-wrap items-center gap-3">
-        <button id="btnQuote" class="btn rounded-2xl px-5 py-3 bg-gradient-to-r from-purple-600 to-cyan-400 text-white font-semibold">Calculer le swap</button>
-        <button id="btnSwap" class="btn rounded-2xl px-5 py-3 bg-slate-800 text-slate-100 border border-slate-700">Confirmer (démo)</button>
-        <span id="swapNote" class="text-sm text-slate-400">Aucune transaction réelle — tout est calcul démo local.</span>
-      </div>
-    </section>
+// Fonctions Supabase
+async function signup() {
+    const email = document.getElementById('emailSignup').value;
+    const password = document.getElementById('passwordSignup').value;
 
-    <!-- Wallets d'encaisse visibles -->
-    <section id="wallets" class="card rounded-2xl p-5 md:p-8 shadow-soft">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="w-2 h-6 rounded-full gradient"></div>
-        <h2 class="text-2xl font-bold">Adresses utilisées pour recevoir les paiements (flash)</h2>
-      </div>
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) alert(error.message);
+    else alert('Inscription réussie ! Vérifiez votre email.');
+}
 
-      <div class="grid md:grid-cols-2 gap-4">
-        <!-- Col 1 -->
-        <div class="space-y-3">
-          <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800 pulse-flash">
-            <div class="text-slate-400 text-sm">TRON (TRX) — <span class="mono">Tron natif</span></div>
-            <div class="flex gap-2 items-center mt-1">
-              <input readonly class="input flex-1 rounded-xl px-3 py-2 mono" value="TY4o9UKBz32xi8hexbv6XhccqGBqSk8oJ7" />
-              <button class="btn px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700" onclick="copyText('TY4o9UKBz32xi8hexbv6XhccqGBqSk8oJ7')">Copier</button>
-            </div>
-          </div>
-          <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800 pulse-flash">
-            <div class="text-slate-400 text-sm">USDT (TRC‑20) — <span class="mono">Tron</span></div>
-            <div class="flex gap-2 items-center mt-1">
-              <input readonly class="input flex-1 rounded-xl px-3 py-2 mono" value="TWjunDHUs3dTYeEC5KFKbiUADGqHG4rDiy" />
-              <button class="btn px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700" onclick="copyText('TWjunDHUs3dTYeEC5KFKbiUADGqHG4rDiy')">Copier</button>
-            </div>
-          </div>
-          <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800 pulse-flash">
-            <div class="text-slate-400 text-sm">BEP‑20 / ERC‑20 / Arbitrum / Base / Polygon (EVM)
-              </div>
-            <div class="flex gap-2 items-center mt-1">
-              <input readonly class="input flex-1 rounded-xl px-3 py-2 mono" value="0xC4c296E406Ba69a04D5E3D6A3D55528C83bddc8F" />
-              <button class="btn px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700" onclick="copyText('0xC4c296E406Ba69a04D5E3D6A3D55528C83bddc8F')">Copier</button>
-            </div>
-          </div>
-          <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800">
-            <div class="text-slate-400 text-sm">FEYORRA (EVM)</div>
-            <div class="flex gap-2 items-center mt-1">
-              <input readonly class="input flex-1 rounded-xl px-3 py-2 mono" value="0x9af5CEd5b30a94794d9C070a78F77b65eb357e12" />
-              <button class="btn px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700" onclick="copyText('0x9af5CEd5b30a94794d9C070a78F77b65eb357e12')">Copier</button>
-            </div>
-          </div>
-          <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800">
-            <div class="text-slate-400 text-sm">LTC (Litecoin)</div>
-            <div class="flex gap-2 items-center mt-1">
-              <input readonly class="input flex-1 rounded-xl px-3 py-2 mono" value="M9NRbJWHaM6Ry7SaG1tjj6qE4XXeYS7mVr" />
-              <button class="btn px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700" onclick="copyText('M9NRbJWHaM6Ry7SaG1tjj6qE4XXeYS7mVr')">Copier</button>
-            </div>
-          </div>
-        </div>
-        <!-- Col 2 -->
-        <div class="space-y-3">
-          <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800">
-            <div class="text-slate-400 text-sm">DOGE (Dogecoin)</div>
-            <div class="flex gap-2 items-center mt-1">
-              <input readonly class="input flex-1 rounded-xl px-3 py-2 mono" value="DDVYeK8MiizfsnzLtigSAWfx6PH24puQze" />
-              <button class="btn px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700" onclick="copyText('DDVYeK8MiizfsnzLtigSAWfx6PH24puQze')">Copier</button>
-            </div>
-          </div>
-          <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800">
-            <div class="text-slate-400 text-sm">TON (The Open Network)</div>
-            <div class="flex gap-2 items-center mt-1">
-              <input readonly class="input flex-1 rounded-xl px-3 py-2 mono" value="EQD14kgmngE0fNYVs7_9dw78V3rPhNt7_Ee-7X3ykDORQvMp" />
-            </div>
-            <div class="mt-2 flex items-center gap-2 text-xs text-slate-300"><span class="badge px-2 py-1 rounded-lg">Memo/Commentaire:</span><span class="mono">492929</span></div>
-          </div>
-          <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800">
-            <div class="text-slate-400 text-sm">SOL (Solana)</div>
-            <div class="flex gap-2 items-center mt-1">
-              <input readonly class="input flex-1 rounded-xl px-3 py-2 mono" value="CWnduVqeRQrxqhGPNDnHTqHWM1dJLqCnojhMQS8FEUFB" />
-              <button class="btn px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700" onclick="copyText('CWnduVqeRQrxqhGPNDnHTqHWM1dJLqCnojhMQS8FEUFB')">Copier</button>
-            </div>
-          </div>
-          <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800">
-            <div class="text-slate-400 text-sm">XRP (Ripple)</div>
-            <div class="flex gap-2 items-center mt-1">
-              <input readonly class="input flex-1 rounded-xl px-3 py-2 mono" value="rhi77L73jGvGN3zQf3AEbYnjWYZu7CSTe8" />
-              <button class="btn px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700" onclick="copyText('rhi77L73jGvGN3zQf3AEbYnjWYZu7CSTe8')">Copier</button>
-            </div>
-            <div class="mt-2 flex items-center gap-2 text-xs text-slate-300"><span class="badge px-2 py-1 rounded-lg">Tag:</span><span class="mono">492929</span></div>
-          </div>
-          <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800">
-            <div class="text-slate-400 text-sm">XMR (Monero)</div>
-            <div class="flex gap-2 items-center mt-1">
-              <input readonly class="input flex-1 rounded-xl px-3 py-2 mono" value="4ByeEKTJbi3faVNHTWEupmM1fdwEv95CqCqC7rCDdVhXDt4vj5E4FB1jUKxNAF6EHFHmuQhnHoXcUK84Nc4cQfmfKQ8zXo5FtRy1bDgqS7" />
-              <button class="btn px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700" onclick="copyText('4ByeEKTJbi3faVNHTWEupmM1fdwEv95CqCqC7rCDdVhXDt4vj5E4FB1jUKxNAF6EHFHmuQhnHoXcUK84Nc4cQfmfKQ8zXo5FtRy1bDgqS7')">Copier</button>
-            </div>
-          </div>
-        </div>
-      </div>
+async function login() {
+    const email = document.getElementById('emailLogin').value;
+    const password = document.getElementById('passwordLogin').value;
 
-      <p class="text-slate-400 text-sm mt-4">Autres adresses: <span class="mono">TRUMP (Solana): CWnduVqeRQrxqhGPNDnHTqHWM1dJLqCnojhMQS8FEUFB</span> • <span class="mono">PEPE (Ethereum): 0x9af5CEd5b30a94794d9C070a78F77b65eb357e12</span> • <span class="mono">TARA (EVM): 0x33156E3EADB2a638E80d69623d87eC478D6b95f6</span></p>
-    </section>
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) alert(error.message);
+    else loadDashboard(data.user);
+}
 
-    <!-- Table des actifs disponibles -->
-    <section class="card rounded-2xl p-5 md:p-8 shadow-soft">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="w-2 h-6 rounded-full gradient"></div>
-        <h2 class="text-2xl font-bold">Actifs disponibles (100 combinaisons)</h2>
-      </div>
-      <div class="overflow-x-auto border border-slate-800 rounded-2xl">
-        <table class="min-w-full text-sm">
-          <thead class="bg-slate-900/60">
-            <tr class="text-left">
-              <th class="py-3 px-4">#</th>
-              <th class="py-3 px-4">Symbole</th>
-              <th class="py-3 px-4">Nom</th>
-              <th class="py-3 px-4">Réseau</th>
-            </tr>
-          </thead>
-          <tbody id="assetTable"></tbody>
-        </table>
-      </div>
-    </section>
+async function loadDashboard(user) {
+    document.querySelector('.container > #loginForm').style.display = 'none';
+    document.querySelector('.container > #signupForm').style.display = 'none';
+    document.querySelector('.container > .tabs').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    document.getElementById('userEmail').innerText = user.email;
 
-  </main>
+    const { data: userData } = await supabase.from('users').select('*').eq('email', user.email).single();
+    document.getElementById('userBonus').innerText = userData?.bonus || 0;
+}
 
-  <footer class="max-w-7xl mx-auto px-4 py-10 text-xs text-slate-500">
-    <div class="border-t border-slate-800 pt-6">Démo UX dédiée à l'intégration prochaine d'un agrégateur DEX/CEX. Aucune promesse de taux, ni exécution on-chain. Pour production: implémentez KYC/AML, estimation dynamique de gas, routage cross-chain, et gestion d'adresses.</div>
-  </footer>
+async function logout() {
+    await supabase.auth.signOut();
+    document.getElementById('dashboard').style.display = 'none';
+    document.querySelector('.container > .tabs').style.display = 'flex';
+    document.getElementById('loginForm').style.display = 'block';
+}
+</script>
 
-  <script>
-    // ======== Data: 20 tokens x 5 réseaux = 100 items ========
-    const networks = [
-      { key: 'TON', label: 'TON' },
-      { key: 'POLYGON', label: 'Polygon' },
-      { key: 'TRC20', label: 'Tron (TRC-20)' },
-      { key: 'TRON', label: 'Tron (natif TRX)' },
-      { key: 'LIGHTNING', label: 'Bitcoin Lightning' }
-    ];
-
-    const tokens = [
-      { symbol:'BTC', name:'Bitcoin' },
-      { symbol:'ETH', name:'Ethereum' },
-      { symbol:'USDT', name:'Tether' },
-      { symbol:'USDC', name:'USD Coin' },
-      { symbol:'BNB', name:'BNB' },
-      { symbol:'MATIC', name:'Polygon (MATIC)' },
-      { symbol:'SOL', name:'Solana' },
-      { symbol:'XRP', name:'XRP' },
-      { symbol:'DOGE', name:'Dogecoin' },
-      { symbol:'LTC', name:'Litecoin' },
-      { symbol:'TRX', name:'TRON' },
-      { symbol:'TON', name:'TON' },
-      { symbol:'XMR', name:'Monero' },
-      { symbol:'PEPE', name:'PEPE' },
-      { symbol:'SHIB', name:'Shiba Inu' },
-      { symbol:'DAI', name:'DAI' },
-      { symbol:'UNI', name:'Uniswap' },
-      { symbol:'OKB', name:'OKB' },
-      { symbol:'TARA', name:'TARA' },
-      { symbol:'FEY', name:'Feyorra' }
-    ];
-
-    // Build 100 combinations (demo). Lightning = BTC only.
-    const assetCombos = [];
-    tokens.forEach(t => {
-      networks.forEach(n => {
-        if (n.key === 'LIGHTNING' && t.symbol !== 'BTC') return; // Only BTC on Lightning
-        if (n.key === 'TRON' && t.symbol !== 'TRX') return;       // Native TRX only
-        if (n.key === 'TON' && !['BTC','ETH','USDT','USDC','TON','TRX','XMR','DOGE','LTC','SOL','XRP','PEPE','DAI','UNI','OKB','TARA','FEY','MATIC','BNB','SHIB'].includes(t.symbol)) return;
-        assetCombos.push({ symbol: t.symbol, name: t.name, network: n.key });
-      });
-    });
-
-    // Ensure at least 100 rows by duplicating plausible EVM routes if needed (demo only)
-    while (assetCombos.length < 100) {
-      assetCombos.push({ symbol: 'USDT', name:'Tether', network:'TRC20' });
-    }
-
-    // UI fill selects
-    const fmtNet = (k)=>({
-      'TON':'TON', 'POLYGON':'Polygon', 'TRC20':'Tron (TRC-20)', 'TRON':'Tron natif', 'LIGHTNING':'Bitcoin Lightning'
-    }[k]||k);
-
-    function labelOf(a){ return `${a.symbol} • ${fmtNet(a.network)}`; }
-
-    const assetInSel = document.getElementById('assetIn');
-    const assetOutSel = document.getElementById('assetOut');
-    const assetTable = document.getElementById('assetTable');
-
-    assetCombos.forEach((a, i) => {
-      const opt1 = document.createElement('option'); opt1.value = i; opt1.textContent = labelOf(a); assetInSel.appendChild(opt1);
-      const opt2 = document.createElement('option'); opt2.value = i; opt2.textContent = labelOf(a); assetOutSel.appendChild(opt2);
-
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td class="py-2 px-4 text-slate-400">${i+1}</td>
-                      <td class="py-2 px-4 mono">${a.symbol}</td>
-                      <td class="py-2 px-4">${a.name}</td>
-                      <td class="py-2 px-4">${fmtNet(a.network)}</td>`;
-      assetTable.appendChild(tr);
-    });
-
-    // Defaults
-    assetInSel.selectedIndex = 2; // USDT TRC20 (probable)
-    assetOutSel.selectedIndex = 0; // BTC on TON if present else first
-
-    // Elements
-    const amountIn = document.getElementById('amountIn');
-    const amountOut = document.getElementById('amountOut');
-    const netInLabel = document.getElementById('netInLabel');
-    const netOutLabel = document.getElementById('netOutLabel');
-    const minFeeFixed = document.getElementById('minFeeFixed');
-    const minFeePct = document.getElementById('minFeePct');
-    const minFeePctLabel = document.getElementById('minFeePctLabel');
-    const networkFeePreset = document.getElementById('networkFeePreset');
-    const networkFeeCustom = document.getElementById('networkFeeCustom');
-    const sumIn = document.getElementById('sumIn');
-    const sumNet = document.getElementById('sumNet');
-    const sumMin = document.getElementById('sumMin');
-    const sumOut = document.getElementById('sumOut');
-    const btnQuote = document.getElementById('btnQuote');
-    const btnSwap = document.getElementById('btnSwap');
-    const destNetwork = document.getElementById('destNetwork');
-    const destAddress = document.getElementById('destAddress');
-    const destMemo = document.getElementById('destMemo');
-    const memoRow = document.getElementById('memoRow');
-
-    function getAsset(sel){ return assetCombos[Number(sel.value)]; }
-
-    function updateLabels(){
-      const aIn = getAsset(assetInSel); const aOut = getAsset(assetOutSel);
-      netInLabel.textContent = fmtNet(aIn.network);
-      netOutLabel.textContent = fmtNet(aOut.network);
-      destNetwork.textContent = fmtNet(aOut.network);
-      // Map réseau -> adresse
-      const mapAddr = {
-        'TRC20': 'TWjunDHUs3dTYeEC5KFKbiUADGqHG4rDiy',
-        'TRON': 'TY4o9UKBz32xi8hexbv6XhccqGBqSk8oJ7',
-        'POLYGON': '0xC4c296E406Ba69a04D5E3D6A3D55528C83bddc8F',
-        'TON': 'EQD14kgmngE0fNYVs7_9dw78V3rPhNt7_Ee-7X3ykDORQvMp',
-        'LIGHTNING': '⚡ Invoice LN (générer côté serveur)'
-      };
-      destAddress.value = mapAddr[aOut.network] || '—';
-      // Memo/Tag si TON ou XRP
-      if (aOut.network === 'TON') { memoRow.style.display='flex'; destMemo.value = '492929'; }
-      else { memoRow.style.display='none'; destMemo.value=''; }
-    }
-
-    function networkFeeEstimate(aOut){
-      // Démo: heuristique simple par réseau ou valeur custom
-      const preset = networkFeePreset.value;
-      if (preset === 'custom') {
-        const v = parseFloat(networkFeeCustom.value); return isNaN(v)?0:v;
-      }
-      const base = { 'TRC20': 1, 'TRON': 0.5, 'POLYGON': 0.05, 'TON': 0.03, 'LIGHTNING': 0.0001 }[aOut.network] || 0.1;
-      const mult = { low:0.5, med:1, high:2, auto:1 }[preset] || 1;
-      return +(base * mult).toFixed(6);
-    }
-
-    function quote(){
-      const aIn = getAsset(assetInSel); const aOut = getAsset(assetOutSel);
-      const amt = parseFloat(amountIn.value);
-      if (!amt || amt <= 0) { amountOut.value=''; sumIn.textContent='-'; sumNet.textContent='-'; sumMin.textContent='-'; sumOut.textContent='-'; return; }
-      // Démo: taux 1:1 hors frais, pour illustrer les composantes
-      const netFee = networkFeeEstimate(aOut);
-      const minFixed = parseFloat(minFeeFixed.value||0);
-      const minPct = parseFloat(minFeePct.value||0) / 100.0;
-      const minFee = +(minFixed + (amt * minPct)).toFixed(8);
-      const out = Math.max(amt - netFee - minFee, 0);
-      amountOut.value = out;
-      sumIn.textContent = `${amt} ${aIn.symbol}`;
-      sumNet.textContent = `${netFee} ${aOut.symbol}`;
-      sumMin.textContent = `${minFee} ${aOut.symbol} → vers votre wallet`;
-      sumOut.textContent = `${out} ${aOut.symbol}`;
-    }
-
-    // Ticker content (demo only)
-    function makeTicker(){
-      const pairs = [
-        'USDT→BTC (TRC20→TON)', 'ETH→USDT (Base→TRC20)', 'SOL→MATIC (Solana→Polygon)', 'TRX→USDT (TRON→TRC20)', 'BTC⚡→USDT (LN→TRC20)'
-      ];
-      const s = pairs.concat(pairs).join(' • • • ');
-      document.getElementById('ticker').innerHTML = `<span>${s}</span>`;
-    }
-
-    // Copy helper
-    window.copyText = function(txt){ navigator.clipboard.writeText(txt); const el = document.createElement('div'); el.textContent='Copié'; el.className='fixed bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-xl bg-slate-800 border border-slate-700 text-sm'; document.body.appendChild(el); setTimeout(()=>el.remove(), 1200); };
-
-    // Events
-    assetInSel.addEventListener('change', updateLabels);
-    assetOutSel.addEventListener('change', ()=>{ updateLabels(); quote(); });
-    amountIn.addEventListener('input', quote);
-    minFeeFixed.addEventListener('input', quote);
-    minFeePct.addEventListener('input', ()=>{ minFeePctLabel.textContent = `${parseFloat(minFeePct.value).toFixed(2)}%`; quote(); });
-    networkFeePreset.addEventListener('change', ()=>{
-      networkFeeCustom.classList.toggle('hidden', networkFeePreset.value !== 'custom'); quote();
-    });
-    networkFeeCustom.addEventListener('input', quote);
-    document.getElementById('copyAddr').addEventListener('click', ()=>copyText(destAddress.value));
-    document.getElementById('copyMemo').addEventListener('click', ()=>copyText(destMemo.value));
-
-    btnQuote.addEventListener('click', quote);
-    btnSwap.addEventListener('click', ()=>{
-      alert('Démo: ici vous déclencheriez la création de l'ordre / invoice et l'affichage des instructions de dépôt.');
-    });
-
-    // Theme toggle
-    document.getElementById('btnDark').addEventListener('click', ()=>{
-      document.body.classList.toggle('invert');
-    });
-
-    // Init
-    updateLabels();
-    makeTicker();
-  </script>
 </body>
 </html>
