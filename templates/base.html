@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Wallet Swap</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-white">
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="p-4 bg-red-500 text-white">
+        {% for m in messages %} <p>{{ m }}</p> {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+  
+  {% block content %}{% endblock %}
+</body>
+</html>
