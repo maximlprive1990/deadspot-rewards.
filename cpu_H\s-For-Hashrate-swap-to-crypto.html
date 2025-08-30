@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulateur Minage CPU</title>
+<style>
+body { font-family: Arial; background:#0a0a0a; color:#e0e0e0; text-align:center; }
+button { padding:10px 20px; margin:5px; border:none; border-radius:8px; background:#444; color:#fff; cursor:pointer; }
+input { padding:5px; margin:5px; }
+#stats { margin:20px; }
+</style>
+</head>
+<body>
+
+<h1>Simulateur Minage CPU</h1>
+
+<div id="stats">
+  <p><b>Deadspot:</b> <span id="deadspot">0</span></p>
+  <p><b>XP:</b> <span id="xp">0</span></p>
+  <p><b>Hashrate:</b> <span id="hashrate">0</span> H/s</p>
+</div>
+
+<label>Puissance CPU (%) :</label>
+<input type="number" id="cpuPercent" value="50" min="1" max="100">%
+<br>
+<button id="startMining">Démarrer Minage</button>
+<button id="stopMining">Arrêter Minage</button>
+<br><br>
+<a href="index.html" style="color:yellow;">Retour à la page principale</a>
+
+<script>
+let state = { deadspot:0, xp:0, hashrate:0 }
+let miningInterval = null
+
+function updateUI(){
+  document.getElementById("deadspot").innerText = state.deadspot.toFixed(4)
+  document.getElementById("xp").innerText = state.xp.toFixed(2)
+  document.getElementById("hashrate").innerText = state.hashrate.toFixed(2)
+}
+
+function simulateHashrate(cpuPercent){
+  return (cpuPercent/100)*50 + Math.random()*5
+}
+
+document.getElementById("startMining").onclick = () => {
+  if(miningInterval) return
+  const cpuPercent = parseInt(document.getElementById("cpuPercent").value)
+  miningInterval = setInterval(()=>{
+    const hr = simulateHashrate(cpuPercent)
+    state.hashrate = hr
+    const gain = hr*0.0001
+    state.deadspot += gain
+    state.xp += gain*0.1
+    updateUI()
+  }, 1000)
+}
+
+document.getElementById("stopMining").onclick = () => {
+  clearInterval(miningInterval)
+  miningInterval = null
+  state.hashrate = 0
+  updateUI()
+}
+</script>
+</body>
+</html>
