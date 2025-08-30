@@ -82,12 +82,12 @@ button:hover { opacity: 0.9; }
 </div>
 
 <script>
-// 🔶 Remplace ces valeurs par tes infos Supabase
+// 🔶 Remplace ces valeurs par TES infos Supabase
 const supabaseUrl = "https://jfpnuttggxrmzrladjyl.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmcG51dHRnZ3hybXpybGFkanlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY1MDI0MTUsImV4cCI6MjA3MjA3ODQxNX0.zaIWDUFGc0NlQ6h400oYXiNFejYnom39aq9N2ZkFHko";
-const supabase = Supabase.createClient(supabaseUrl, supabaseKey);
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9....";
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-// Onglets Login / Signup
+// Onglets
 document.getElementById('loginTab').onclick = () => {
     document.getElementById('loginForm').style.display = 'block';
     document.getElementById('signupForm').style.display = 'none';
@@ -101,16 +101,17 @@ document.getElementById('signupTab').onclick = () => {
     document.getElementById('loginTab').classList.remove('active');
 }
 
-// Fonctions Supabase
+// Inscription
 async function signup() {
     const email = document.getElementById('emailSignup').value;
     const password = document.getElementById('passwordSignup').value;
 
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) alert(error.message);
-    else alert('Inscription réussie ! Vérifiez votre email.');
+    else alert('✅ Inscription réussie ! Vérifiez votre email.');
 }
 
+// Connexion
 async function login() {
     const email = document.getElementById('emailLogin').value;
     const password = document.getElementById('passwordLogin').value;
@@ -120,21 +121,24 @@ async function login() {
     else loadDashboard(data.user);
 }
 
+// Dashboard
 async function loadDashboard(user) {
-    document.querySelector('.container > #loginForm').style.display = 'none';
-    document.querySelector('.container > #signupForm').style.display = 'none';
-    document.querySelector('.container > .tabs').style.display = 'none';
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('signupForm').style.display = 'none';
+    document.querySelector('.tabs').style.display = 'none';
     document.getElementById('dashboard').style.display = 'block';
     document.getElementById('userEmail').innerText = user.email;
 
+    // Charger bonus depuis table "users"
     const { data: userData } = await supabase.from('users').select('*').eq('email', user.email).single();
     document.getElementById('userBonus').innerText = userData?.bonus || 0;
 }
 
+// Déconnexion
 async function logout() {
     await supabase.auth.signOut();
     document.getElementById('dashboard').style.display = 'none';
-    document.querySelector('.container > .tabs').style.display = 'flex';
+    document.querySelector('.tabs').style.display = 'flex';
     document.getElementById('loginForm').style.display = 'block';
 }
 </script>
