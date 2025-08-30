@@ -8,32 +8,19 @@
 <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
 <style>
 body { font-family: Arial, sans-serif; background:#0a0a0a; color:#e0e0e0; margin:0; text-align:center; }
-#login-overlay {
-  position: fixed; top:0; left:0; width:100%; height:100%;
-  background: rgba(0,0,0,0.85);
-  display:flex; align-items:center; justify-content:center; z-index:9999;
-}
-#login-box {
-  background:#111; padding:25px; border-radius:12px; width:320px; max-width:90%; text-align:center; overflow:visible; 
-  box-shadow: 0 0 20px #00ff99aa;
-}
+#login-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display:flex; align-items:center; justify-content:center; z-index:9999; }
+#login-box { background:#111; padding:25px; border-radius:12px; width:320px; max-width:90%; text-align:center; overflow:visible; box-shadow: 0 0 20px #00ff99aa; }
 #login-box h2 { color:white; margin-bottom:15px; }
-#login-box input {
-  width:90%; padding:8px; margin:5px 0; border-radius:6px; border:none;
-}
-button {
-  padding:10px 20px; margin:5px; border:none; border-radius:8px; cursor:pointer;
-  background:#00ff99; color:#000; font-weight:bold; transition: transform 0.1s;
-}
+#login-box input { width:90%; padding:8px; margin:5px 0; border-radius:6px; border:none; }
+button { padding:10px 20px; margin:5px; border:none; border-radius:8px; cursor:pointer; background:#00ff99; color:#000; font-weight:bold; transition: transform 0.1s; }
 button:hover { transform: scale(1.05); }
-
 #app { display:none; padding:20px; }
 .energy-bar { width:100%; background:#333; border-radius:12px; overflow:hidden; margin:10px 0; }
 .energy-fill { height:20px; background:lime; width:100%; transition:width 0.3s; animation:flash 2s infinite; }
 @keyframes flash { 0%{opacity:1} 50%{opacity:0.6} 100%{opacity:1} }
 #stats { margin:20px; text-align:left; display:inline-block; }
-a { color:yellow; text-decoration:none; }
-a:hover { text-decoration:underline; }
+a { color:yellow; text-decoration:none; } a:hover { text-decoration:underline; }
+#coming-soon { margin-top:20px; padding:15px; background:#222; border-radius:12px; color:#ffcc00; }
 </style>
 </head>
 <body>
@@ -44,14 +31,8 @@ a:hover { text-decoration:underline; }
     <h2>Connexion</h2>
     <input type="email" id="email" placeholder="Email"><br>
     <input type="password" id="password" placeholder="Mot de passe"><br><br>
-
-    <div class="h-captcha" 
-         data-sitekey="ES_04ef5b9205754f168e57485a0893f1ad" 
-         data-theme="dark" 
-         data-size="compact">
-    </div>
+    <div class="h-captcha" data-sitekey="e90edc1a-505c-4e72-917e-456850c8a23e" data-theme="dark" data-size="compact"></div>
     <br>
-
     <button id="btnSignUp">S'inscrire</button>
     <button id="btnSignIn">Se connecter</button>
   </div>
@@ -65,25 +46,32 @@ a:hover { text-decoration:underline; }
     <p><b>XP:</b> <span id="xp">0</span></p>
     <p><b>Level:</b> <span id="level">1</span></p>
     <p><b>Énergie:</b> <span id="energy">1000</span> / <span id="energyMax">1000</span></p>
+    <p><b>Bonus accumulé:</b> <span id="bonus">0</span></p>
+    <p><b>VIP Progress:</b> <span id="vip">0%</span></p>
+  </div>
+  <div class="energy-bar"><div class="energy-fill" id="energy-fill"></div></div>
+  <button id="clickBtn">CLICK to Earn</button>
+  
+  <!-- Coming Soon / Bonus / VIP -->
+  <div id="coming-soon">
+    <h3>🎉 Coming Soon !!</h3>
+    <p>Bonus accumulé et <b>VIP Status Approved!</b></p>
   </div>
 
-  <div class="energy-bar"><div class="energy-fill" id="energy-fill"></div></div>
-
-  <button id="clickBtn">CLICK to Earn</button>
   <br><br>
   <a href="cpu_simulator.html">Aller à la page Simulateur CPU</a>
 </div>
 
 <script>
 // ============================
-// CONFIG SUPABASE (Front-end)
+// CONFIG SUPABASE
 // ============================
 const SUPABASE_URL = "https://wbavwtwslofcrpeuyqak.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_Q_Jm1qse1MuBwINNgm7QuQ_sqQG-WfA";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // STATE INITIAL
-let state = { deadspot:0, xp:0, level:1, energy:1000, energyMax:1000 };
+let state = { deadspot:0, xp:0, level:1, energy:1000, energyMax:1000, bonus:0, vip:0 };
 
 // ============================
 // LOAD / SAVE via BACK-END
@@ -92,11 +80,8 @@ async function loadUserState() {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if(!session) return;
   const userId = session.user.id;
-
-  // Appel API sécurisée back-end
   const res = await fetch('http://localhost:3000/api/loadUserState', {
-    method: 'POST',
-    headers: { 'Content-Type':'application/json' },
+    method: 'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ userId })
   });
   const result = await res.json();
@@ -108,10 +93,8 @@ async function saveUserState() {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if(!session) return;
   const userId = session.user.id;
-
   await fetch('http://localhost:3000/api/saveUserState', {
-    method: 'POST',
-    headers: { 'Content-Type':'application/json' },
+    method: 'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ userId, state })
   });
 }
@@ -125,7 +108,10 @@ function updateUI(){
   document.getElementById("level").innerText = state.level;
   document.getElementById("energy").innerText = state.energy;
   document.getElementById("energyMax").innerText = state.energyMax;
+  document.getElementById("bonus").innerText = state.bonus.toFixed(2);
+  document.getElementById("vip").innerText = state.vip.toFixed(1) + "%";
   document.getElementById("energy-fill").style.width = (state.energy/state.energyMax*100)+"%";
+  document.getElementById("clickBtn").disabled = state.energy <= 0;
 }
 
 // ============================
@@ -134,15 +120,11 @@ function updateUI(){
 document.getElementById("btnSignUp").onclick = async () => {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
-
   const captchaResponse = hcaptcha.getResponse();
-  if(!captchaResponse) {
-    alert("Veuillez valider le captcha");
-    return;
-  }
-
+  if(!captchaResponse) { alert("Veuillez valider le captcha"); return; }
   const { error } = await supabaseClient.auth.signUp({ email, password });
-  if(error) alert(error.message); else alert("Inscription réussie !");
+  if(error) alert(error.message);
+  else alert("Inscription réussie !");
 }
 
 // ============================
@@ -151,7 +133,6 @@ document.getElementById("btnSignUp").onclick = async () => {
 document.getElementById("btnSignIn").onclick = async () => {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
-
   const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
   if(error) alert(error.message);
   else {
@@ -167,11 +148,41 @@ document.getElementById("btnSignIn").onclick = async () => {
 document.getElementById("clickBtn").onclick = () => {
   if(state.energy <=0) return alert("Pas assez d'énergie");
   state.energy--;
-  state.deadspot += 0.001 + Math.random()*0.27;
-  state.xp += 0.175;
-  if(state.xp > (15*Math.pow(1.27,state.level-1))) state.level++;
-  updateUI(); saveUserState();
+
+  // Deadspot aléatoire 0.0001 - 0.278
+  const gainDeadspot = Math.random() * (0.278 - 0.0001) + 0.0001;
+  state.deadspot += gainDeadspot;
+
+  // XP aléatoire 35 - 1875
+  state.xp += Math.floor(Math.random() * (1875 - 35 + 1) + 35);
+
+  // Bonus accumulé (5% de Deadspot gagné)
+  state.bonus += gainDeadspot * 0.05;
+
+  // VIP progress (exemple: 0 à 100% basé sur XP)
+  state.vip = Math.min(100, state.xp / 10000 * 100);
+
+  // Level up
+  while(state.xp > (15*Math.pow(1.27,state.level-1))) state.level++;
+
+  updateUI();
+  saveUserState();
 }
+
+// ============================
+// AUTO ENERGY RECHARGE & VIP BOOST
+// ============================
+setInterval(() => {
+  // Recharge 5 énergie toutes les 5 secondes
+  if(state.energy < state.energyMax) {
+    state.energy = Math.min(state.energy + 5, state.energyMax);
+  }
+  // VIP progress boost passif
+  state.vip = Math.min(100, state.vip + 0.05);
+
+  updateUI();
+  saveUserState();
+}, 5000); // 5 sec
 
 // ============================
 // AUTO LOGIN IF SESSION
