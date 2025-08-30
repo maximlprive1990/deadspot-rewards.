@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rewards Airdrop Mining</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://js.hcaptcha.com/1/api.js" async defer></script>
 <style>
 body { font-family: Arial, sans-serif; background:#0a0a0a; color:#e0e0e0; margin:0; text-align:center; }
 #login-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display:flex; align-items:center; justify-content:center; z-index:9999; }
@@ -21,6 +20,12 @@ button:hover { transform: scale(1.05); }
 #stats { margin:20px; text-align:left; display:inline-block; }
 a { color:yellow; text-decoration:none; } a:hover { text-decoration:underline; }
 #coming-soon { margin-top:20px; padding:15px; background:#222; border-radius:12px; color:#ffcc00; }
+
+/* Section options retractable */
+#settings { margin-top:20px; text-align:left; width:90%; max-width:500px; margin-left:auto; margin-right:auto; }
+#settings button { width:100%; background:#222; color:yellow; text-align:left; }
+#settings-content { display:none; background:#111; padding:10px; border-radius:8px; margin-top:5px; }
+.setting-item { margin:5px 0; }
 </style>
 </head>
 <body>
@@ -28,13 +33,8 @@ a { color:yellow; text-decoration:none; } a:hover { text-decoration:underline; }
 <!-- LOGIN / INSCRIPTION -->
 <div id="login-overlay">
   <div id="login-box">
-    <h2>Connexion</h2>
-    <input type="email" id="email" placeholder="Email"><br>
-    <input type="password" id="password" placeholder="Mot de passe"><br><br>
-    <!-- HCAPTCHA (désactivé pour dev local) -->
-    <!-- <div class="h-captcha" data-sitekey="e90edc1a-505c-4e72-917e-456850c8a23e" data-theme="dark" data-size="compact"></div> -->
-    <br>
-    <button id="btnSignUp">S'inscrire</button>
+    <h2>Connexion par numéro</h2>
+    <input type="tel" id="phone" placeholder="Numéro de téléphone"><br><br>
     <button id="btnSignIn">Se connecter</button>
   </div>
 </div>
@@ -61,6 +61,30 @@ a { color:yellow; text-decoration:none; } a:hover { text-decoration:underline; }
 
   <br><br>
   <a href="cpu_simulator.html">Aller à la page Simulateur CPU</a>
+
+  <!-- Options / Settings retractable -->
+  <div id="settings">
+    <button id="toggleSettings">⚙️ Options / Management</button>
+    <div id="settings-content">
+      <div class="setting-item">
+        <label>Activer double authentification: </label>
+        <input type="checkbox" id="enable2FA">
+      </div>
+      <div class="setting-item">
+        <label>Réglage Energie max: </label>
+        <input type="number" id="maxEnergyInput" value="1000">
+        <button onclick="setMaxEnergy()">Valider</button>
+      </div>
+      <div class="setting-item">
+        <label>Multiplier Deadspot: </label>
+        <input type="number" id="deadspotMultiplier" value="1" step="0.1">
+        <button onclick="setDeadspotMultiplier()">Valider</button>
+      </div>
+      <div class="setting-item">
+        <label>Autres réglages futurs…</label>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -73,6 +97,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // STATE INITIAL
 let state = { deadspot:0, xp:0, level:1, energy:1000, energyMax:1000, bonus:0, vip:0 };
+let deadspotMultiplier = 1;
 
 // ============================
 // LOAD / SAVE via BACK-END
@@ -104,7 +129,7 @@ async function saveUserState() {
 // UPDATE UI
 // ============================
 function updateUI(){
-  document.getElementById("deadspot").innerText = state.deadspot.toFixed(4);
+  document.getElementById("deadspot").innerText = (state.deadspot*deadspotMultiplier).toFixed(4);
   document.getElementById("xp").innerText = state.xp.toFixed(2);
   document.getElementById("level").innerText = state.level;
   document.getElementById("energy").innerText = state.energy;
@@ -116,38 +141,17 @@ function updateUI(){
 }
 
 // ============================
-// SIGN UP
-// ============================
-document.getElementById("btnSignUp").onclick = async () => {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-
-  // ======= CAPTCHA DÉSACTIVÉ POUR DEV LOCAL =======
-  // const captchaResponse = hcaptcha.getResponse();
-  // if(!captchaResponse) { alert("Veuillez valider le captcha"); return; }
-
-  const { error } = await supabaseClient.auth.signUp({ email, password });
-  if(error) alert(error.message);
-  else alert("Inscription réussie ! (captcha bypassé pour dev)");
-}
-
-// ============================
-// SIGN IN
+// LOGIN PAR TÉLÉPHONE
 // ============================
 document.getElementById("btnSignIn").onclick = async () => {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+  const phone = document.getElementById("phone").value;
+  if(!phone) return alert("Veuillez entrer votre numéro de téléphone");
 
-  // ======= CAPTCHA DÉSACTIVÉ POUR DEV LOCAL =======
-  // normalement ici aussi tu pourrais vérifier hcaptcha.getResponse()
-  
-  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-  if(error) alert(error.message);
-  else {
-    document.getElementById("login-overlay").style.display="none";
-    document.getElementById("app").style.display="block";
-    await loadUserState();
-  }
+  // Ici on peut utiliser Supabase OTP login ou juste simuler login local dev
+  // Exemple: on considère phone valide pour dev
+  document.getElementById("login-overlay").style.display="none";
+  document.getElementById("app").style.display="block";
+  await loadUserState();
 }
 
 // ============================
@@ -157,11 +161,10 @@ document.getElementById("clickBtn").onclick = () => {
   if(state.energy <=0) return alert("Pas assez d'énergie");
   state.energy--;
 
-  const gainDeadspot = Math.random() * (0.278 - 0.0001) + 0.0001;
+  const gainDeadspot = (Math.random() * (0.278 - 0.0001) + 0.0001);
   state.deadspot += gainDeadspot;
 
   state.xp += Math.floor(Math.random() * (1875 - 35 + 1) + 35);
-
   state.bonus += gainDeadspot * 0.05;
   state.vip = Math.min(100, state.xp / 10000 * 100);
 
@@ -184,16 +187,24 @@ setInterval(() => {
 }, 5000);
 
 // ============================
-// AUTO LOGIN IF SESSION
+// SETTINGS / MANAGEMENT
 // ============================
-window.addEventListener("load", async () => {
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  if(session){
-    document.getElementById("login-overlay").style.display="none";
-    document.getElementById("app").style.display="block";
-    await loadUserState();
-  }
-});
+document.getElementById("toggleSettings").onclick = () => {
+  const content = document.getElementById("settings-content");
+  content.style.display = content.style.display === "none" ? "block" : "none";
+}
+
+function setMaxEnergy() {
+  const val = parseInt(document.getElementById("maxEnergyInput").value);
+  if(val>0) state.energyMax = val;
+  updateUI();
+}
+
+function setDeadspotMultiplier() {
+  const val = parseFloat(document.getElementById("deadspotMultiplier").value);
+  if(val>0) deadspotMultiplier = val;
+  updateUI();
+}
 </script>
 </body>
 </html>
