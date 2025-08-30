@@ -19,6 +19,7 @@ a { color:yellow; text-decoration:none; } a:hover { text-decoration:underline; }
 #settings-content { display:none; background:#111; padding:10px; border-radius:8px; margin-top:5px; }
 .setting-item { margin:5px 0; }
 #identity { margin:20px; padding:10px; background:#111; border-radius:10px; box-shadow:0 0 10px #00ff99aa; }
+#clock { font-size:2.5em; margin:20px auto; padding:20px; border:3px solid #00ff99; border-radius:15px; width:fit-content; background:#111; box-shadow:0 0 20px #00ff99aa; }
 </style>
 </head>
 <body>
@@ -30,16 +31,21 @@ a { color:yellow; text-decoration:none; } a:hover { text-decoration:underline; }
   <p><b>Votre Username :</b> <span id="username"></span></p>
 </div>
 
+<!-- HORLOGE -->
+<div id="clock">--:--:--</div>
+
 <!-- APP -->
 <div id="app">
   <h1>Rewards Airdrop Mining</h1>
   <div id="stats">
     <p><b>Deadspot:</b> <span id="deadspot">0</span></p>
+    <p><b>Diamants:</b> <span id="diamants">0</span></p>
     <p><b>XP:</b> <span id="xp">0</span></p>
     <p><b>Level:</b> <span id="level">1</span></p>
     <p><b>Énergie:</b> <span id="energy">1000</span> / <span id="energyMax">1000</span></p>
     <p><b>Bonus accumulé:</b> <span id="bonus">0</span></p>
     <p><b>VIP Progress:</b> <span id="vip">0%</span></p>
+    <p><b>Mining Power (GH/s):</b> <span id="ghs">0.0</span></p>
   </div>
   <div class="energy-bar"><div class="energy-fill" id="energy-fill"></div></div>
   <button id="clickBtn">CLICK to Earn</button>
@@ -80,8 +86,20 @@ a { color:yellow; text-decoration:none; } a:hover { text-decoration:underline; }
 
 <script>
 // STATE INITIAL
-let state = { deadspot:0, xp:0, level:1, energy:1000, energyMax:1000, bonus:0, vip:0 };
+let state = { deadspot:0, diamants:0, xp:0, level:1, energy:1000, energyMax:1000, bonus:0, vip:0, ghs:0 };
 let deadspotMultiplier = 1;
+let taskTimer = 0; // minutes passées
+let xpBoost = 1;   // augmente de 15% toutes les 6h
+
+// ============================
+// HORLOGE (Québec)
+// ============================
+function updateClock(){
+  let options = { timeZone:"America/Toronto", hour:"2-digit", minute:"2-digit", second:"2-digit" };
+  let now = new Date().toLocaleTimeString("fr-CA", options);
+  document.getElementById("clock").innerText = now;
+}
+setInterval(updateClock,1000); updateClock();
 
 // ============================
 // IDENTIFICATION IP + USERNAME
@@ -95,7 +113,6 @@ async function getClientIP(){
     document.getElementById("clientIP").innerText = "Non détectée";
   }
 }
-
 function getOrCreateUsername(){
   let username = localStorage.getItem("username");
   if(!username){
@@ -104,15 +121,14 @@ function getOrCreateUsername(){
   }
   document.getElementById("username").innerText = username;
 }
-
-getClientIP();
-getOrCreateUsername();
+getClientIP(); getOrCreateUsername();
 
 // ============================
 // UPDATE UI
 // ============================
 function updateUI(){
   document.getElementById("deadspot").innerText = (state.deadspot*deadspotMultiplier).toFixed(4);
+  document.getElementById("diamants").innerText = state.diamants.toFixed(4);
   document.getElementById("xp").innerText = state.xp.toFixed(2);
   document.getElementById("level").innerText = state.level;
   document.getElementById("energy").innerText = state.energy;
@@ -121,6 +137,7 @@ function updateUI(){
   document.getElementById("vip").innerText = state.vip.toFixed(1) + "%";
   document.getElementById("energy-fill").style.width = (state.energy/state.energyMax*100)+"%";
   document.getElementById("clickBtn").disabled = state.energy <= 0;
+  document.getElementById("ghs").innerText = state.ghs.toFixed(3);
 }
 
 // ============================
@@ -130,43 +147,62 @@ document.getElementById("clickBtn").onclick = () => {
   if(state.energy <=0) return alert("Pas assez d'énergie");
   state.energy--;
 
-  const gainDeadspot = (Math.random() * (0.278 - 0.0001) + 0.0001);
+  const gainDeadspot = (Math.random() * (0.05 - 0.0001) + 0.0001); // réduit
   state.deadspot += gainDeadspot;
+  state.diamants += 0.125; // nouveau gain diamant
 
-  state.xp += Math.floor(Math.random() * (1875 - 35 + 1) + 35);
+  state.xp += (5 * xpBoost); // XP réduit
   state.bonus += gainDeadspot * 0.05;
-  state.vip = Math.min(100, state.xp / 10000 * 100);
+  state.vip = Math.min(100, state.xp / 50000 * 100);
 
-  while(state.xp > (15*Math.pow(1.27,state.level-1))) state.level++;
+  while(state.xp > (250*Math.pow(1.35,state.level-1))) state.level++;
 
   updateUI();
 }
 
 // ============================
-// AUTO ENERGY RECHARGE & VIP BOOST
+// AUTO SYSTEM (5s)
 // ============================
 setInterval(() => {
   if(state.energy < state.energyMax) {
     state.energy = Math.min(state.energy + 5, state.energyMax);
   }
   state.vip = Math.min(100, state.vip + 0.05);
+
+  // gains passifs
+  state.diamants += 0.125; 
+
+  // minuterie tâches bonus
+  taskTimer += 5;
+  if(taskTimer >= 600){ // 10 minutes
+    state.ghs += 0.1;
+    state.deadspot += 0.001;
+    state.diamants += 0.1895;
+    state.xp += 1.7 * xpBoost;
+    taskTimer = 0;
+    alert("🎉 Bonus 10min obtenu !");
+  }
+
   updateUI();
 }, 5000);
 
 // ============================
-// SETTINGS / MANAGEMENT
+// BOOST XP chaque 6h (+15%)
+// ============================
+setInterval(()=>{ xpBoost *= 1.15; }, 21600000); // 6h
+
+// ============================
+// SETTINGS
 // ============================
 document.getElementById("toggleSettings").onclick = () => {
   const content = document.getElementById("settings-content");
   content.style.display = content.style.display === "none" ? "block" : "none";
 }
-
 function setMaxEnergy() {
   const val = parseInt(document.getElementById("maxEnergyInput").value);
   if(val>0) state.energyMax = val;
   updateUI();
 }
-
 function setDeadspotMultiplier() {
   const val = parseFloat(document.getElementById("deadspotMultiplier").value);
   if(val>0) deadspotMultiplier = val;
@@ -177,4 +213,5 @@ updateUI();
 </script>
 </body>
 </html>
+
 
