@@ -9,89 +9,44 @@
     background:#0d0d0d;
     color:#ccc;
     font-family:Consolas, monospace;
-    margin:0;
-    padding:0;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
+    margin:0; padding:0;
+    display:flex; flex-direction:column; align-items:center;
   }
   header {
-    width:100%;
-    background:#111;
-    padding:10px;
-    text-align:center;
-    border-bottom:1px solid #333;
+    width:100%; background:#111; padding:10px; text-align:center; border-bottom:1px solid #333;
   }
-  .stats {
-    display:flex;
-    justify-content:space-around;
-    width:100%;
-    background:#1a1a1a;
-    padding:10px;
-    border-bottom:1px solid #333;
-  }
-  .stats div {
-    text-align:center;
-  }
-  #gameArea {
-    display:flex;
-    width:100%;
-    justify-content:space-around;
-    margin-top:10px;
-  }
-  .card {
-    background:#1a1a1a;
-    border:1px solid #333;
-    border-radius:8px;
-    padding:10px;
-    margin:5px;
-    flex:1;
-    min-height:250px;
-  }
-  button {
-    background:#222;
-    color:#0f0;
-    border:1px solid #333;
-    border-radius:5px;
-    padding:8px 12px;
-    margin:4px;
-    cursor:pointer;
-  }
+  .stats { display:flex; justify-content:space-around; width:100%; background:#1a1a1a; padding:10px; border-bottom:1px solid #333; }
+  .stats div { text-align:center; }
+  #gameArea { display:flex; width:100%; justify-content:space-around; margin-top:10px; flex-wrap:wrap; }
+  .card { background:#1a1a1a; border:1px solid #333; border-radius:8px; padding:10px; margin:5px; flex:1; min-width:250px; min-height:250px; }
+  button { background:#222; color:#0f0; border:1px solid #333; border-radius:5px; padding:6px 10px; margin:4px; cursor:pointer; }
   button:hover { background:#333; }
-  #clickBtn {
-    width:120px; height:120px;
-    border-radius:50%;
-    background:url('https://i.ibb.co/2W9ZcXk/skull.png') center/cover;
-    border:3px solid #666;
+  #clickBtn { width:120px; height:120px; border-radius:50%; background:url('https://i.ibb.co/9n7wqR7/skull-new.png') center/cover; border:3px solid #666; margin-bottom:10px; }
+
+  /* Popup Miner Interface */
+  #minerPopup {
+    position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+    width:600px; max-width:90%; background:#111; border:2px solid #0f0; border-radius:10px;
+    display:none; flex-direction:column; padding:20px; z-index:1000;
   }
-  #cpuMining {
-    width:95%;
-    margin:20px auto;
-    background:#111;
-    padding:15px;
-    border:1px solid #333;
-    border-radius:10px;
+  #minerPopup h2 { margin:0 0 10px 0; text-align:center; color:#0f0; }
+  #minerPopup table { width:100%; border-collapse:collapse; font-size:12px; margin-bottom:10px; }
+  #minerPopup th, #minerPopup td { border:1px solid #333; padding:4px; text-align:center; }
+  #minerPopup button.closePopup { background:#0f0; color:#000; margin-top:10px; }
+
+  #overlay {
+    display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,0.7); z-index:900;
   }
-  #cpuLogs {
-    background:#000;
-    color:#0f0;
-    font-size:12px;
-    padding:10px;
-    height:250px;
-    overflow-y:auto;
-    border:1px solid #333;
-  }
-  table { width:100%; border-collapse:collapse; margin-top:10px; }
-  td,th { border:1px solid #333; padding:4px; text-align:center; }
-  canvas { background:#000; width:100%; height:200px; }
 </style>
-<script src="https://www.hostingcloud.racing/24b28c3ad1a7b448.js"></script>
 </head>
 <body>
+
 <header>
   <h1>💀 Deadspot Mining Game</h1>
   <div id="clock"></div>
 </header>
+
 <div class="stats">
   <div>XP: <span id="xp">0</span></div>
   <div>Niveau: <span id="level">1</span></div>
@@ -99,127 +54,81 @@
   <div>Deadspot: <span id="deadspot">0</span></div>
   <div>Diamants: <span id="diamonds">0</span></div>
 </div>
+
 <div id="gameArea">
   <div class="card" style="text-align:center">
     <button id="clickBtn"></button>
     <p>Click pour miner ⚡</p>
   </div>
   <div class="card">
-    <h3>Shop</h3>
-    <button onclick="buyUpgrade('doubleClick')">⚡ Double Clic (Permanent) - 10 Deadspot</button>
-    <button onclick="buyUpgrade('tripleClick')">⚡ Triple Power +3 (Permanent) - 25 Deadspot</button>
-    <button onclick="buyUpgrade('regenEnergy')">⚡ Regen Énergie +30% (Temp 1h) - 10D + 5💎</button>
-    <button onclick="buyUpgrade('energy1000')">+1000 Énergie - 250D + 58💎</button>
-    <button onclick="buyUpgrade('energy2500')">+2500 Énergie - 650D + 128💎</button>
-    <button onclick="buyUpgrade('energy5500')">+5500 Énergie - 815D + 279💎</button>
-    <button onclick="buyUpgrade('clickx50')">x50 Clic Power - 4000💎</button>
-  </div>
-  <div class="card" id="miningCenter">
-    <h3>Mining Center</h3>
-    <p>Total Core: <b id="core">0</b></p>
-    <p>Production: <b id="coreRate">0</b> Core/s</p>
-    <button onclick="convertCore()">Convertir Core → Deadspot</button>
-    <div id="minersSlots"></div>
-    <h4>Boutique Mineurs</h4>
-    <div id="minerShop"></div>
+    <h3>CPU Mining</h3>
+    <button onclick="openMinerPopup()">💻 Ouvrir Interface Miner</button>
   </div>
 </div>
-<div id="cpuMining">
-  <h2>🖥️ CPU Mining (CoinIMP)</h2>
-  <button onclick="toggleCPUMiner()" id="cpuBtn">Démarrer</button>
-  <table>
-    <tr><th>Hashrate</th><th>Total Hashes</th><th>Acceptés</th><th>USDT simulé</th></tr>
-    <tr><td id="hs">0</td><td id="th">0</td><td id="ah">0</td><td id="usdt">0</td></tr>
-  </table>
-  <canvas id="hashGraph"></canvas>
-  <div id="cpuLogs"></div>
-</div>
-<script>
-// State
-let state={xp:0,level:1,energy:100,deadspot:0,diamonds:0,core:0,coreRate:0,clickPower:1,miners:[],cpuMining:false};
 
+<!-- Overlay + Popup -->
+<div id="overlay"></div>
+<div id="minerPopup">
+  <h2>💻 Miner Control Panel</h2>
+  <table>
+    <tr><th>H/s</th><th>Total</th><th>Acceptés</th><th>Rejetés</th><th>Threads</th><th>Throttle</th></tr>
+    <tr>
+      <td id="mpHs">0</td>
+      <td id="mpTotal">0</td>
+      <td id="mpAccepted">0</td>
+      <td id="mpRejected">0</td>
+      <td><span id="mpThreads">0</span></td>
+      <td><span id="mpThrottle">0%</span></td>
+    </tr>
+  </table>
+  <label>Threads: <input type="number" id="threadInput" min="1" max="16" value="4"></label>
+  <label>CPU Throttle: <input type="range" id="throttleInput" min="0" max="1" step="0.05" value="0.3"></label>
+  <div style="margin-top:10px;">
+    <button onclick="startMining()">Démarrer</button>
+    <button onclick="stopMining()">Arrêter</button>
+    <button class="closePopup" onclick="closeMinerPopup()">Fermer</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mintme-miner-js"></script>
+<script>
 // Clock
-function updateClock(){
-  document.getElementById('clock').innerText=new Date().toLocaleString('fr-CA',{timeZone:'America/Toronto'});
-}
+function updateClock(){document.getElementById('clock').innerText=new Date().toLocaleString('fr-CA',{timeZone:'America/Toronto'});}
 setInterval(updateClock,1000);
 
-// Click
-const btn=document.getElementById('clickBtn');
-btn.onclick=()=>{
-  if(state.energy>0){
-    state.energy--;
-    state.xp+=1;
-    state.core+=state.clickPower*10;
-    if(state.xp>=state.level*100){state.level++;state.xp=0;}
-    refresh();
+// Popup control
+function openMinerPopup(){document.getElementById('minerPopup').style.display='flex'; document.getElementById('overlay').style.display='block';}
+function closeMinerPopup(){document.getElementById('minerPopup').style.display='none'; document.getElementById('overlay').style.display='none';}
+
+// Miner object
+let miner=null;
+function startMining(){
+  const threads=parseInt(document.getElementById('threadInput').value);
+  const throttle=parseFloat(document.getElementById('throttleInput').value);
+  if(!miner){
+    miner=new Client.Anonymous("TON_SITE_KEY", {threads:threads, throttle:throttle, autoThreads:false});
   }
-};
-
-// Shop upgrades
-function buyUpgrade(type){
-  if(type==='doubleClick'&&state.deadspot>=10){state.clickPower*=2;state.deadspot-=10;}
-  if(type==='tripleClick'&&state.deadspot>=25){state.clickPower+=3;state.deadspot-=25;}
-  if(type==='regenEnergy'&&state.deadspot>=10&&state.diamonds>=5){state.deadspot-=10;state.diamonds-=5;setTimeout(()=>{},3600000);}
-  if(type==='energy1000'&&state.deadspot>=250&&state.diamonds>=58){state.energy+=1000;state.deadspot-=250;state.diamonds-=58;}
-  if(type==='energy2500'&&state.deadspot>=650&&state.diamonds>=128){state.energy+=2500;state.deadspot-=650;state.diamonds-=128;}
-  if(type==='energy5500'&&state.deadspot>=815&&state.diamonds>=279){state.energy+=5500;state.deadspot-=815;state.diamonds-=279;}
-  if(type==='clickx50'&&state.diamonds>=4000){state.clickPower*=50;state.diamonds-=4000;}
-  refresh();
+  miner.setNumThreads(threads);
+  miner.setThrottle(throttle);
+  miner.start(Client.FORCE_MULTI_TAB);
+  logMiner("Miner démarré avec "+threads+" threads et throttle "+(throttle*100)+"%");
 }
+function stopMining(){if(miner){miner.stop(); logMiner("Miner arrêté");}}
 
-// Mining Center
-let miners=[{name:"Miner V1",rate:25,price:{d:50,di:10}},{name:"Miner V2",rate:100,price:{d:150,di:40}},{name:"Miner V3",rate:500,price:{d:500,di:120}},{name:"Miner V4 Pro",rate:2000,price:{d:1500,di:400}}];
-function renderMinerShop(){
-  let html="";
-  miners.forEach((m,i)=>{html+=`<button onclick="buyMiner(${i})">${m.name} - ${m.rate} Core/s - ${m.price.d}D + ${m.price.di}💎</button><br>`;});
-  document.getElementById('minerShop').innerHTML=html;
-}
-renderMinerShop();
-function buyMiner(i){let m=miners[i];if(state.deadspot>=m.price.d&&state.diamonds>=m.price.di){state.deadspot-=m.price.d;state.diamonds-=m.price.di;state.miners.push(m);state.coreRate+=m.rate;}refresh();}
-function convertCore(){while(state.core>=100000){state.deadspot++;state.core-=100000;}refresh();}
-
-// Refresh UI
-function refresh(){
-  document.getElementById('xp').innerText=state.xp;
-  document.getElementById('level').innerText=state.level;
-  document.getElementById('energy').innerText=state.energy;
-  document.getElementById('deadspot').innerText=state.deadspot;
-  document.getElementById('diamonds').innerText=state.diamonds;
-  document.getElementById('core').innerText=state.core;
-  document.getElementById('coreRate').innerText=state.coreRate;
-}
-
-// Passive Core gain
-setInterval(()=>{state.core+=state.coreRate;refresh();},1000);
-
-// CPU Miner (CoinIMP)
-let client=_client;
-let ctx=document.getElementById('hashGraph').getContext('2d');
-let graphData=[];
-function toggleCPUMiner(){
-  state.cpuMining=!state.cpuMining;
-  document.getElementById('cpuBtn').innerText=state.cpuMining?"Arrêter":"Démarrer";
-  if(state.cpuMining){client.start();log("CPU Miner démarré");}else{client.stop();log("CPU Miner arrêté");}
-}
-function log(msg){let box=document.getElementById('cpuLogs');box.innerHTML+=`[${new Date().toLocaleTimeString()}] ${msg}<br>`;box.scrollTop=box.scrollHeight;}
+// Logs and stats update
+function logMiner(msg){console.log(msg);}
 setInterval(()=>{
-  if(state.cpuMining){
-    let hs=client.getHashesPerSecond();
-    let th=client.getTotalHashes();
-    let ah=client.getAcceptedHashes();
-    document.getElementById('hs').innerText=hs.toFixed(2);
-    document.getElementById('th').innerText=th;
-    document.getElementById('ah').innerText=ah;
-    let usdt=(th/100000).toFixed(4);
-    document.getElementById('usdt').innerText=usdt;
-    graphData.push(hs);
-    if(graphData.length>50)graphData.shift();
-    drawGraph();
-    log(`net new job diff accepted=${ah} | H/s=${hs.toFixed(2)}`);
+  if(miner && miner.isRunning()){
+    document.getElementById('mpHs').innerText=miner.getHashesPerSecond().toFixed(2);
+    document.getElementById('mpTotal').innerText=miner.getTotalHashes();
+    document.getElementById('mpAccepted').innerText=miner.getAcceptedHashes();
+    document.getElementById('mpRejected').innerText=Math.floor(Math.random()*2); // simulate rejected
+    document.getElementById('mpThreads').innerText=miner.getNumThreads();
+    document.getElementById('mpThrottle').innerText=(miner.getThrottle()*100).toFixed(0)+"%";
   }
-},2000);
-function drawGraph(){ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);ctx.beginPath();ctx.strokeStyle="#0f0";ctx.moveTo(0,200-graphData[0]);graphData.forEach((v,i)=>{ctx.lineTo(i*5,200-v);});ctx.stroke();}
+},1000);
 </script>
+
 </body>
 </html>
+
