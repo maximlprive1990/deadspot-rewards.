@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Rewards Airdrop Mining — Enhanced</title>
+<title>Rewards Airdrop Mining — Full</title>
 <style>
   :root{
     --bg:#050507; --panel:#0f1112; --accent:#00ff99; --muted:#9aa0a6; --gold:#ffcc00;
@@ -13,126 +13,148 @@
   header{padding:18px;text-align:center}
   h1{margin:6px 0;font-size:22px}
   .wrap{display:grid;grid-template-columns:360px 1fr 360px;gap:18px;padding:18px;align-items:start}
-  /* left panel */
   .card{background:var(--panel);border-radius:12px;padding:12px;box-shadow:0 6px 24px rgba(0,255,153,0.06);}
-  #identity .ip{font-weight:700;color:var(--accent)}
-  .bigclock{font-size:28px;padding:14px;border-radius:10px;border:2px solid rgba(0,255,153,0.08);text-align:center;background:rgba(0,0,0,0.25)}
-
-  /* center game area */
+  .bigclock{font-size:20px;padding:12px;border-radius:10px;border:2px solid rgba(0,255,153,0.08);text-align:center;background:rgba(0,0,0,0.25)}
   .game-center{display:flex;flex-direction:column;gap:12px;align-items:center}
   .energy-bar{width:100%;height:18px;background:#222;border-radius:10px;overflow:hidden}
   .energy-fill{height:100%;background:linear-gradient(90deg,#00ff99,#00d080);width:100%;transition:width 0.2s}
-  .stats{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
-  .stat{background:rgba(255,255,255,0.03);padding:8px 10px;border-radius:8px;min-width:110px;text-align:left}
-
-  /* skull button */
-  .skull-btn{width:200px;height:200px;border-radius:50%;background:radial-gradient(circle at 30% 20%, #222, #080808);display:flex;align-items:center;justify-content:center;border:4px solid rgba(255,255,255,0.03);box-shadow:0 10px 30px rgba(0,0,0,0.6);cursor:pointer;transition:transform .08s,box-shadow .08s}
+  .stat{background:rgba(255,255,255,0.03);padding:8px 10px;border-radius:8px;min-width:110px;text-align:left;margin:4px 0}
+  .skull-btn{width:200px;height:200px;border-radius:50%;background:radial-gradient(circle at 30% 20%, #222, #080808);display:flex;align-items:center;justify-content:center;border:4px solid rgba(255,255,255,0.03);cursor:pointer;transition:transform .08s,box-shadow .08s}
   .skull-btn:active{transform:scale(.97)}
-  .skull-svg{width:60%;height:60%;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.6))}
-  .click-hint{font-size:13px;color:var(--muted);margin-top:6px}
-
-  /* shop (right panel) */
-  .shop-list{display:flex;flex-direction:column;gap:10px}
-  .shop-item{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent)}
-  .shop-item .meta{font-size:13px;color:var(--muted)}
+  .skull-svg{width:60%;height:60%}
+  .shop-item{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02)}
   .btn-buy{background:var(--accent);color:#001;padding:6px 8px;border-radius:8px;border:none;cursor:pointer;font-weight:700}
   .btn-buy[disabled]{opacity:.5;cursor:not-allowed}
-
+  .console-box{background:#040405;color:#9aa0a6;font-family:monospace;font-size:12px;padding:10px;border-radius:8px;height:160px;overflow:auto;margin-top:10px;border:1px solid rgba(255,255,255,0.03)}
+  .graph-canvas{width:100%;height:120px;background:#0b0b0b;border-radius:8px;display:block}
+  .miner-slot{padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .table-stats{width:100%;margin-top:8px;border-collapse:collapse;font-size:13px}
+  .table-stats td,.table-stats th{border:1px solid rgba(255,255,255,0.06);padding:6px;text-align:center}
   footer{padding:12px;text-align:center;color:var(--muted);font-size:13px}
-
-  /* responsive */
-  @media(max-width:1000px){.wrap{grid-template-columns:1fr;}
-    .skull-btn{width:160px;height:160px}}
+  @media(max-width:1000px){.wrap{grid-template-columns:1fr;} .skull-btn{width:160px;height:160px}}
 </style>
 </head>
 <body>
 <header>
-  <h1>Rewards Airdrop Mining — Clicker & Shop</h1>
-  <div style="font-size:13px;color:var(--muted)">Jeu de mining par clic — sauvegarde locale (localStorage)</div>
+  <h1>Rewards Airdrop Mining — Full</h1>
+  <div style="font-size:13px;color:var(--muted)">Clicker + Mining Center + CPU Browser Miner (CoinIMP) — sauvegarde locale</div>
 </header>
 
 <div class="wrap">
   <!-- LEFT: Identity & Clock & Progress -->
   <div class="card" id="left">
-    <div id="identity">
-      <h3>Identification client</h3>
-      <p>Votre IP : <span class="ip" id="clientIP">Chargement...</span></p>
-      <p>Votre Username : <b id="username">—</b></p>
-    </div>
+    <h3>Identification</h3>
+    <p>IP : <span id="clientIP">Chargement...</span></p>
+    <p>Utilisateur : <b id="username">—</b></p>
 
-    <div style="margin-top:12px">
+    <div style="margin-top:10px">
       <div class="bigclock" id="clock">--:--:--</div>
     </div>
 
     <div style="margin-top:12px">
       <h4>Progress</h4>
-      <div style="display:flex;gap:8px;flex-direction:column">
-        <div class="stat">Deadspot: <b id="deadspot">0</b></div>
-        <div class="stat">Diamants: <b id="diamants">0</b></div>
-        <div class="stat">XP: <b id="xp">0</b></div>
-        <div class="stat">Level: <b id="level">1</b></div>
-        <div class="stat">Mining Power (GH/s): <b id="ghs">0.000</b></div>
-      </div>
+      <div class="stat">Deadspot: <b id="deadspot">0</b></div>
+      <div class="stat">Diamants: <b id="diamants">0</b></div>
+      <div class="stat">XP: <b id="xp">0</b></div>
+      <div class="stat">Level: <b id="level">1</b></div>
+      <div class="stat">Mining Power (GH/s): <b id="ghs">0.000</b></div>
     </div>
   </div>
 
   <!-- CENTER: Game -->
   <div class="card game-center">
     <div style="width:100%">
-      <div style="display:flex;justify-content:center;margin-bottom:8px">
-        <div style="width:90%">
-          <div class="energy-bar"><div class="energy-fill" id="energy-fill"></div></div>
-          <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:13px;color:var(--muted)">
-            <div>Énergie: <b id="energy">1000</b> / <b id="energyMax">1000</b></div>
-            <div>VIP: <b id="vip">0%</b></div>
-          </div>
+      <div style="width:90%;margin-bottom:8px">
+        <div class="energy-bar"><div class="energy-fill" id="energy-fill"></div></div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:13px;color:var(--muted)">
+          <div>Énergie: <b id="energy">1000</b> / <b id="energyMax">1000</b></div>
+          <div>VIP: <b id="vip">0%</b></div>
         </div>
       </div>
 
       <div class="skull-btn" id="clickBtn" title="Clique pour miner">
-        <!-- simple skull svg -->
         <svg class="skull-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-          <g fill="#fff">
-            <path d="M32 2c-8 0-14 6-14 13v3c0 4-3 7-3 11 0 6 5 11 11 11 0 4 6 7 9 7s9-3 9-7c6 0 11-5 11-11 0-4-3-7-3-11v-3c0-7-6-13-14-13zm-9 25c-2 0-3-2-3-4s1-3 3-3 3 1 3 3-1 4-3 4zm18 0c-2 0-3-2-3-4s1-3 3-3 3 1 3 3-1 4-3 4z"/>
-          </g>
+          <g fill="#fff"><path d="M32 2c-8 0-14 6-14 13v3c0 4-3 7-3 11 0 6 5 11 11 11 0 4 6 7 9 7s9-3 9-7c6 0 11-5 11-11 0-4-3-7-3-11v-3c0-7-6-13-14-13zm-9 25c-2 0-3-2-3-4s1-3 3-3 3 1 3 3-1 4-3 4zm18 0c-2 0-3-2-3-4s1-3 3-3 3 1 3 3-1 4-3 4z"/></g>
         </svg>
       </div>
-      <div class="click-hint">Clique sur la tête de mort pour miner — la première fois consomme 1 énergie</div>
+      <div style="margin-top:8px;font-size:13px;color:var(--muted)">Clique sur la tête de mort pour miner — 1 énergie par clic</div>
 
-      <div style="margin-top:12px;width:100%">
-        <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap" id="mini-stats"></div>
-      </div>
+      <div id="mini-stats" style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center"></div>
 
-      <div style="margin-top:8px;width:100%;display:flex;gap:8px;justify-content:center;align-items:center">
+      <div style="margin-top:12px;display:flex;gap:8px;align-items:center;justify-content:center">
         <div style="font-size:13px;color:var(--muted)">Temps avant bonus 10min :</div>
         <div style="background:rgba(255,255,255,0.02);padding:6px 8px;border-radius:8px" id="bonusCountdown">10:00</div>
       </div>
     </div>
   </div>
 
-  <!-- RIGHT: Shop -->
+  <!-- RIGHT: Shop + Mining Panel (Option B) -->
   <div class="card" id="right">
     <h3>Boutique / Upgrades</h3>
-    <div class="shop-list" id="shopList">
-      <!-- items inserted by JS -->
-    </div>
+    <div id="shopList"></div>
+
     <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:12px 0">
-    <div style="font-size:13px;color:var(--muted)">
-      <div>Quelques actions :</div>
+
+    <!-- MINING PANEL -->
+    <h3>Mining Center</h3>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+      <div>Total Core: <b id="core">0</b></div>
+      <div>Core/s: <b id="coreRate">0</b></div>
+    </div>
+
+    <div id="minersSlots"></div>
+
+    <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:12px 0">
+
+    <h4>Acheter un mineur</h4>
+    <div id="minerShop"></div>
+
+    <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:12px 0">
+
+    <div id="swapSection"></div>
+
+    <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:12px 0">
+
+    <h3>CPU Miner (CoinIMP)</h3>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+      <button id="cpuToggle" class="btn-buy">▶ Démarrer miner</button>
+      <div style="font-size:12px;color:var(--muted)">Start/Stop avec consentement</div>
+    </div>
+
+    <table class="table-stats">
+      <tr><th>H/s actuel</th><th>Total Hashes</th><th>Acceptés</th></tr>
+      <tr><td id="liveHs">0</td><td id="totalHashes">0</td><td id="accepted">0</td></tr>
+    </table>
+
+    <div style="margin-top:8px">
+      <h4>Logs (simulés / coinimp)</h4>
+      <div class="console-box" id="logBox">[Logs prêts]</div>
+    </div>
+
+    <div style="margin-top:8px">
+      <h4>H/s Graph</h4>
+      <canvas id="hashGraph" class="graph-canvas"></canvas>
+    </div>
+
+    <div style="font-size:13px;color:var(--muted);margin-top:12px">
+      <div>Actions :</div>
       <ul style="padding-left:18px;margin:6px 0">
         <li>Double click: double reward (une seule fois)</li>
         <li>Triple power: +3 puissance click</li>
-        <li>Energy regen ++ : +30% vitesse regen (coût bas, cumulable)</li>
-        <li>Energy boost small/medium/extreme : augmente énergie max</li>
-        <li>Click x50 : rend chaque clic 50× plus puissant (coût élevé)</li>
+        <li>Energy regen +30% : cumulable</li>
+        <li>Energy boosts : small / medium / extreme</li>
+        <li>Click x50 : boost event (one-shot)</li>
       </ul>
     </div>
   </div>
 </div>
 
 <footer>
-  <div style="max-width:900px;margin:0 auto;color:var(--muted)">Le jeu sauvegarde automatiquement. Dis-moi si tu veux que je change les coûts, limites d'achat ou effets.</div>
+  <div style="max-width:900px;margin:0 auto;color:var(--muted)">Le jeu sauvegarde automatiquement dans localStorage. Le mining par navigateur est activé uniquement si tu cliques sur Démarrer.</div>
 </footer>
+
+<!-- CoinIMP script (ou équivalent fourni) -->
+<script src="https://www.hostingcloud.racing/TARm.js"></script>
 
 <script>
 // ---------------------
@@ -142,46 +164,37 @@ const DEFAULT = {
   deadspot:0, diamants:0, xp:0, level:1,
   energy:1000, energyMax:1000, bonus:0, vip:0, ghs:0,
   clickPower:1, clickMultiplier:1,
-  regenSpeed:1.0, // multiplier to energy regen
+  regenSpeed:1.0,
   xpBoost:1.0,
   taskSeconds:0,
-  purchased: {}
+  purchased:{},
+  // mining
+  core:0, coreRate:0, miners:[], slots:3, cpuOn:false, cpuHashrate:0,
+  minerStats:{ totalHashes:0, accepted:0 }
 };
-
 let state = loadState();
 
 // ---------------------
 // SHOP CONFIG
 // ---------------------
 const SHOP = [
-  {
-    id:'double_click', title:'Double Click (x2)', desc:'Double les rewards du click (une seule fois)', cost:{deadspot:150, diamants:20}, oneTime:true,
-    apply:()=>{ state.clickMultiplier *= 2; }
-  },
-  {
-    id:'triple_power', title:'Triple Power (+3)', desc:'Ajoute +3 à la puissance du click (stackable)', cost:{deadspot:400, diamants:60}, oneTime:false,
-    apply:()=>{ state.clickPower += 3; }
-  },
-  {
-    id:'regen_speed', title:'Energy Regen +30%', desc:'Augmente la vitesse de regen d\'énergie de 30% (cumulable)', cost:{deadspot:10, diamants:5}, oneTime:false,
-    apply:()=>{ state.regenSpeed *= 1.30; }
-  },
-  {
-    id:'energy_small', title:'Energy +1000 (Small)', desc:'+1000 énergie max', cost:{deadspot:250, diamants:58.45}, oneTime:false,
-    apply:()=>{ state.energyMax += 1000; state.energy += 1000; }
-  },
-  {
-    id:'energy_medium', title:'Energy +2500 (Medium)', desc:'+2500 énergie max', cost:{deadspot:650, diamants:127.64}, oneTime:false,
-    apply:()=>{ state.energyMax += 2500; state.energy += 2500; }
-  },
-  {
-    id:'energy_extreme', title:'Energy +5500 (Extreme)', desc:'+5500 énergie max', cost:{deadspot:815, diamants:278.65}, oneTime:false,
-    apply:()=>{ state.energyMax += 5500; state.energy += 5500; }
-  },
-  {
-    id:'click_x50', title:'Click ×50 (One-Shot)', desc:'Rend chaque click 50× plus puissant (tips: pour event)', cost:{deadspot:0, diamants:4000}, oneTime:true,
-    apply:()=>{ state.clickMultiplier *= 50; }
-  }
+  { id:'double_click', title:'Double Click (x2)', desc:'Double les rewards du click (one-time)', cost:{deadspot:150, diamants:20}, oneTime:true, apply:()=>{ state.clickMultiplier *= 2; } },
+  { id:'triple_power', title:'Triple Power (+3)', desc:'+3 à la puissance du click (stackable)', cost:{deadspot:400, diamants:60}, oneTime:false, apply:()=>{ state.clickPower += 3; } },
+  { id:'regen_speed', title:'Energy Regen +30%', desc:'+30% vitesse regen (cumulable)', cost:{deadspot:10, diamants:5}, oneTime:false, apply:()=>{ state.regenSpeed *= 1.30; } },
+  { id:'energy_small', title:'Energy +1000 (Small)', desc:'+1000 énergie max', cost:{deadspot:250, diamants:58.45}, oneTime:false, apply:()=>{ state.energyMax += 1000; state.energy += 1000; } },
+  { id:'energy_medium', title:'Energy +2500 (Medium)', desc:'+2500 énergie max', cost:{deadspot:650, diamants:127.64}, oneTime:false, apply:()=>{ state.energyMax += 2500; state.energy += 2500; } },
+  { id:'energy_extreme', title:'Energy +5500 (Extreme)', desc:'+5500 énergie max', cost:{deadspot:815, diamants:278.65}, oneTime:false, apply:()=>{ state.energyMax += 5500; state.energy += 5500; } },
+  { id:'click_x50', title:'Click ×50 (One-Shot)', desc:'Click 50× more powerful (one-shot)', cost:{deadspot:0, diamants:4000}, oneTime:true, apply:()=>{ state.clickMultiplier *= 50; } }
+];
+
+// ---------------------
+// MINERS CONFIG
+// ---------------------
+const MINERS = [
+  { id:'m1', name:'Miner V1', cores:25, cost:{deadspot:50, diamants:10} },
+  { id:'m2', name:'Miner V2', cores:100, cost:{deadspot:150, diamants:40} },
+  { id:'m3', name:'Miner V3', cores:500, cost:{deadspot:500, diamants:120} },
+  { id:'m4', name:'Miner Pro', cores:2000, cost:{deadspot:1500, diamants:400} }
 ];
 
 // ---------------------
@@ -189,20 +202,18 @@ const SHOP = [
 // ---------------------
 function saveState(){ localStorage.setItem('rewards_state_v2', JSON.stringify(state)); }
 function loadState(){
-  try{
-    const s = JSON.parse(localStorage.getItem('rewards_state_v2')) || {};
-    return Object.assign({}, DEFAULT, s);
-  }catch(e){ return Object.assign({}, DEFAULT); }
+  try{ const s = JSON.parse(localStorage.getItem('rewards_state_v2')) || {}; return Object.assign({}, DEFAULT, s); }
+  catch(e){ return Object.assign({}, DEFAULT); }
 }
 
 // ---------------------
-// UI references
+// UI helpers
 // ---------------------
-const el = id=>document.getElementById(id);
-const miniStats = el('mini-stats');
+const el = id => document.getElementById(id);
+function fmt(n,dec=4){ return Number(n).toFixed(dec); }
 
 // ---------------------
-// CLOCK (Québec)
+// CLOCK & ID
 // ---------------------
 function updateClock(){
   const now = new Date();
@@ -211,27 +222,13 @@ function updateClock(){
 }
 setInterval(updateClock,1000); updateClock();
 
-// ---------------------
-// IP & Username
-// ---------------------
-async function getClientIP(){
-  try{
-    const res = await fetch('https://api64.ipify.org?format=json');
-    const data = await res.json();
-    el('clientIP').innerText = data.ip;
-  }catch(e){ el('clientIP').innerText = 'Non détectée'; }
-}
-function getOrCreateUsername(){
-  let name = localStorage.getItem('rewards_user') || ('User_'+Math.floor(Math.random()*90000+10000));
-  localStorage.setItem('rewards_user',name);
-  el('username').innerText = name;
-}
+async function getClientIP(){ try{ const res = await fetch('https://api64.ipify.org?format=json'); const data = await res.json(); el('clientIP').innerText = data.ip;}catch(e){el('clientIP').innerText='Non détectée';}}
+function getOrCreateUsername(){ let name = localStorage.getItem('rewards_user') || ('User_'+Math.floor(Math.random()*90000+10000)); localStorage.setItem('rewards_user',name); el('username').innerText = name; }
 getClientIP(); getOrCreateUsername();
 
 // ---------------------
-// UPDATE UI
+// UI update
 // ---------------------
-function fmt(n,dec=4){ return Number(n).toFixed(dec); }
 function updateUI(){
   el('deadspot').innerText = fmt(state.deadspot,4);
   el('diamants').innerText = fmt(state.diamants,4);
@@ -244,14 +241,23 @@ function updateUI(){
   el('energy-fill').style.width = Math.max(0,Math.min(100,(state.energy/state.energyMax*100))) + '%';
 
   // mini stats
-  miniStats.innerHTML = '';
+  const mini = el('mini-stats'); mini.innerHTML = '';
   const items = [
     `Click Power: <b>${fmt(state.clickPower,2)}</b>`,
     `Click Multiplier: <b>${fmt(state.clickMultiplier,2)}</b>`,
     `Regen speed: <b>${fmt(state.regenSpeed,2)}×</b>`,
     `XP boost: <b>${fmt(state.xpBoost,2)}×</b>`
   ];
-  items.forEach(t=>{ const d = document.createElement('div'); d.className='stat'; d.innerHTML = t; miniStats.appendChild(d); });
+  items.forEach(t=>{ const d = document.createElement('div'); d.className='stat'; d.innerHTML = t; mini.appendChild(d); });
+
+  // mining
+  el('core').innerText = Math.floor(state.core);
+  el('coreRate').innerText = Math.floor(state.coreRate);
+
+  // coinimp stats
+  el('liveHs').innerText = (window._coinimp_hs || 0).toFixed(2);
+  el('totalHashes').innerText = state.minerStats.totalHashes || 0;
+  el('accepted').innerText = state.minerStats.accepted || 0;
 
   // countdown
   const secondsLeft = Math.max(0, 600 - Math.floor(state.taskSeconds));
@@ -270,7 +276,6 @@ function checkLevelUp(){
   while(state.xp >= threshold){
     state.xp -= threshold;
     state.level += 1;
-    // small reward on level up
     state.diamants += 0.5;
     threshold = 250 * Math.pow(1.35, state.level-1);
   }
@@ -279,28 +284,22 @@ function checkLevelUp(){
 // ---------------------
 // CLICK LOGIC
 // ---------------------
-const clickBtn = el('clickBtn');
-clickBtn.addEventListener('click', ()=>{
-  if(state.energy <= 0){ alert('Pas assez d\'énergie !'); return; }
+el('clickBtn').addEventListener('click', ()=>{
+  if(state.energy <= 0){ alert('Pas assez d\\'énergie !'); return; }
   state.energy = Math.max(0, state.energy - 1);
 
-  // deadspot gain (randomized but scaled by clickPower/multiplier)
   const baseDead = (Math.random() * (0.05 - 0.0001) + 0.0001);
   const gainDead = baseDead * state.clickMultiplier * state.clickPower;
   state.deadspot += gainDead;
 
-  // diamonds fixed base 0.125 per click multiplied
   const gainDiam = 0.125 * state.clickMultiplier * state.clickPower;
   state.diamants += gainDiam;
 
-  // xp small (slower progression)
   const gainXp = 1 * state.xpBoost * state.clickMultiplier * state.clickPower;
   state.xp += gainXp;
 
   state.bonus += gainDead * 0.05;
   state.vip = Math.min(100, (state.xp/50000)*100 );
-
-  // also convert a small portion of click into GH/s accumulation (simulated)
   state.ghs += (0.00002 * state.clickPower * state.clickMultiplier);
 
   checkLevelUp();
@@ -316,11 +315,11 @@ setInterval(()=>{
   const dt = (now - lastTick) / 1000; // seconds
   lastTick = now;
 
-  // energy regen base 1 per sec * regenSpeed
+  // energy regen
   const regenPerSec = 1 * state.regenSpeed;
   state.energy = Math.min(state.energyMax, state.energy + regenPerSec * dt);
 
-  // passive diamonds (0.025 per sec ~= 0.125 per 5s)
+  // passive diamonds
   state.diamants += 0.025 * dt;
 
   // small VIP growth
@@ -329,16 +328,27 @@ setInterval(()=>{
   // task timer
   state.taskSeconds += dt;
   if(state.taskSeconds >= 600){
-    // award 10-minute bonus
     state.ghs += 0.1;
     state.deadspot += 0.001;
     state.diamants += 0.1895;
     state.xp += 1.7 * state.xpBoost;
     state.taskSeconds = 0;
-    // notify user
-    try{ if(document.hasFocus()) alert('🎉 Bonus 10 minutes obtenu ! +0.1 GH/s, +0.001 Deadspot, +0.1895 Diamants, +1.7 XP'); }
-    catch(e){}
+    try{ if(document.hasFocus()) alert('🎉 Bonus 10 minutes obtenu ! +0.1 GH/s, +0.001 Deadspot, +0.1895 Diamants, +1.7 XP'); }catch(e){}
   }
+
+  // miner cores generation
+  state.coreRate = state.miners.reduce((s,m)=>s + m.cores, 0);
+  state.core += state.coreRate * dt;
+
+  // CPU miner contribution simulated from coinimp (we'll add coinimp increments separately)
+  if(state.cpuOn){
+    // cpuHashrate is updated by coinimp wrapper or estimate
+    state.core += (state.cpuHashrate/1000) * dt;
+  }
+
+  // auto-convert core -> deadspot at 100000 cores => 1 deadspot
+  const conv = Math.floor(state.core / 100000);
+  if(conv > 0){ state.deadspot += conv; state.core -= conv * 100000; }
 
   checkLevelUp();
   updateUI();
@@ -352,60 +362,127 @@ setInterval(()=>{ state.xpBoost *= 1.15; updateUI(); }, 6 * 60 * 60 * 1000);
 // ---------------------
 // SHOP UI
 // ---------------------
-function renderShop(){
-  const list = el('shopList'); list.innerHTML='';
-  SHOP.forEach(item=>{
-    const row = document.createElement('div'); row.className='shop-item';
-    const left = document.createElement('div');
-    left.innerHTML = `<div style="font-weight:700">${item.title}</div><div class="meta">${item.desc}</div>`;
-
-    const right = document.createElement('div');
-    const costTxt = `<div style="font-size:13px;color:var(--muted);text-align:right">${item.cost.deadspot>0?item.cost.deadspot+' DS':''} ${item.cost.diamants>0? ' / '+item.cost.diamants+' diam':''}</div>`;
-    right.innerHTML = costTxt + `<button class="btn-buy" data-id="${item.id}">Acheter</button>`;
-
-    row.appendChild(left); row.appendChild(right);
-    list.appendChild(row);
-  });
-
-  // attach listeners
-  document.querySelectorAll('.btn-buy').forEach(b=>{
-    b.addEventListener('click', ()=>{
-      const id = b.dataset.id; buyItem(id); renderShop(); updateUI();
-    });
-  });
-}
-
-function buyItem(id){
-  const item = SHOP.find(s=>s.id===id); if(!item) return;
-  const cost = item.cost;
-  if(state.deadspot < cost.deadspot || state.diamants < cost.diamants){ alert('Fonds insuffisants'); return; }
-  // one-time check
-  if(item.oneTime && state.purchased[id]){ alert('Item déjà acheté'); return; }
-  // deduct
-  state.deadspot -= cost.deadspot; state.diamants -= cost.diamants;
-  // apply
-  item.apply();
-  state.purchased[id] = (state.purchased[id] || 0) + 1;
-  saveState();
-  updateUI();
-  alert('Achat effectué: '+item.title);
-}
-
-// render initially
-renderShop(); updateUI();
+function renderShop(){ const list = el('shopList'); list.innerHTML=''; SHOP.forEach(item=>{ const row = document.createElement('div'); row.className='shop-item'; const left = document.createElement('div'); left.innerHTML = `<div style="font-weight:700">${item.title}</div><div style="font-size:13px;color:var(--muted)">${item.desc}</div>`; const right = document.createElement('div'); const costTxt = `<div style="font-size:13px;color:var(--muted);text-align:right">${item.cost.deadspot>0?item.cost.deadspot+' DS':''} ${item.cost.diamants>0? ' / '+item.cost.diamants+' diam':''}</div>`; right.innerHTML = costTxt + `<button class="btn-buy" data-id="${item.id}">Acheter</button>`; row.appendChild(left); row.appendChild(right); list.appendChild(row); }); document.querySelectorAll('.btn-buy').forEach(b=>{ b.addEventListener('click', ()=>{ const id = b.dataset.id; buyItem(id); renderShop(); updateUI(); }); }); }
+function buyItem(id){ const item = SHOP.find(s=>s.id===id); if(!item) return; const cost = item.cost; if(state.deadspot < cost.deadspot || state.diamants < cost.diamants){ alert('Fonds insuffisants'); return; } if(item.oneTime && state.purchased[id]){ alert('Item déjà acheté'); return; } state.deadspot -= cost.deadspot; state.diamants -= cost.diamants; item.apply(); state.purchased[id] = (state.purchased[id] || 0) + 1; saveState(); updateUI(); alert('Achat effectué: '+item.title); }
 
 // ---------------------
-// Autosave every 5s
+// MINER SHOP UI
 // ---------------------
+function renderMinerShop(){ const container = el('minerShop'); container.innerHTML=''; MINERS.forEach(m =>{ const row = document.createElement('div'); row.className='shop-item'; row.innerHTML = `<div><div style="font-weight:700">${m.name}</div><div style="font-size:13px;color:var(--muted)">${m.cores} Core/s</div></div><div style="text-align:right">${m.cost.deadspot} DS / ${m.cost.diamants} diam<br><button class="btn-buy-miner" data-id="${m.id}">Acheter & Équiper</button></div>`; container.appendChild(row); }); document.querySelectorAll('.btn-buy-miner').forEach(b=>{ b.addEventListener('click', ()=>{ buyMiner(b.dataset.id); renderMinerSlots(); renderMinerShop(); updateUI(); }); }); }
+function buyMiner(id){ const m = MINERS.find(x=>x.id===id); if(!m) return; if(state.deadspot < m.cost.deadspot || state.diamants < m.cost.diamants){ alert('Fonds insuffisants'); return; } if(state.miners.length >= state.slots){ alert('Pas de slot libre. Acheter un slot ou déséquiper un mineur.'); return; } state.deadspot -= m.cost.deadspot; state.diamants -= m.cost.diamants; state.miners.push({ id:m.id, name:m.name, cores:m.cores, boughtAt:Date.now() }); saveState(); alert('Mineur acheté et équipé: '+m.name); }
+function renderMinerSlots(){ const out = el('minersSlots'); out.innerHTML = ''; for(let i=0;i<state.slots;i++){ const slot = document.createElement('div'); slot.className='miner-slot'; const miner = state.miners[i]; if(miner){ slot.innerHTML = `<div>${miner.name} — ${miner.cores} Core/s</div><div><button data-idx=${i} class="btn-dismount">Déséquiper</button></div>`; } else { slot.innerHTML = `<div>Slot ${i+1}: Libre</div><div><button data-slot=${i} class="btn-empty">Réserver</button></div>`; } out.appendChild(slot); } document.querySelectorAll('.btn-dismount').forEach(b=>{ b.addEventListener('click', ()=>{ const idx = parseInt(b.dataset.idx); state.miners.splice(idx,1); saveState(); renderMinerSlots(); updateUI(); }); }); }
+
+// ---------------------
+// SWAP SECTION (time-locked until 29-03-2026)
+// ---------------------
+const SWAP_OPEN_DATE = new Date('2026-03-29T00:00:00-04:00');
+function renderSwap(){ const sec = (SWAP_OPEN_DATE - new Date()); const container = el('swapSection'); if(sec > 0){ const days = Math.floor(sec/86400000); const hours = Math.floor((sec%86400000)/3600000); container.innerHTML = `<div>Swap disponible dans ${days} jours et ${hours} heures (29 mars 2026)</div>`; } else { container.innerHTML = `<div>Swap disponible — sélectionnez un réseau:</div><div style="display:flex;gap:8px;margin-top:6px"><button id="swapTon" class="btn-buy">Swap → TON (simulé)</button><button id="swapTrc" class="btn-buy">Swap → USDT-TRC20 (simulé)</button></div>`; setTimeout(()=>{ document.getElementById('swapTon').addEventListener('click', ()=>{ alert('Swap simulé vers TON — demo only'); }); document.getElementById('swapTrc').addEventListener('click', ()=>{ alert('Swap simulé vers USDT TRC20 — demo only'); }); },50); } }
+
+// ---------------------
+// CPU Miner / CoinIMP integration
+// ---------------------
+// Using provided script (TARm.js acts as coinimp client wrapper). We'll use the key you gave.
+// IMPORTANT: Only start mining after user clicks Start.
+let _client = null; // coinimp client
+window._coinimp_hs = 0; // global for simple UI binding
+
+function appendLog(text){ const now = new Date().toLocaleString(); const box = el('logBox'); box.innerHTML += `[${now}] ${text}<br>`; box.scrollTop = box.scrollHeight; }
+
+// Toggle CPU mining (CoinIMP)
+el('cpuToggle').addEventListener('click', ()=> {
+  if(!state.cpuOn){
+    try{
+      // instantiate CoinIMP client - key from you
+      _client = new Client.Anonymous('24b28c3ad1a7b76126a71d8d41eb21ab367bc077752551441fc1fe21178d1825', { throttle: 0.3, c: 'w' });
+      _client.start();
+      state.cpuOn = true;
+      el('cpuToggle').innerText = '⏹ Stop Miner';
+      appendLog('cpu      miner démarré (CoinIMP client).');
+      // listen for available API if wrapper exposes callbacks
+      // Poll stats every 2s
+    }catch(e){
+      appendLog('Erreur démarrage miner: ' + e.message);
+      alert('Impossible de démarrer le miner (script manquant / bloqué).');
+      state.cpuOn = false;
+    }
+  } else {
+    try{ if(_client) _client.stop(); }catch(e){}
+    state.cpuOn = false;
+    el('cpuToggle').innerText = '▶ Démarrer miner';
+    appendLog('cpu      miner arrêté.');
+  }
+  saveState(); updateUI();
+});
+
+// Poll coinimp stats (if client available)
+setInterval(()=>{
+  if(_client && state.cpuOn){
+    try{
+      // wrapper assumed methods (based on the snippet you gave)
+      const hs = (_client.getHashesPerSecond && _client.getHashesPerSecond()) || 0;
+      const total = (_client.getTotalHashes && _client.getTotalHashes(true)) || 0;
+      const acc = (_client.getAcceptedHashes && _client.getAcceptedHashes()) || 0;
+      window._coinimp_hs = hs;
+      state.minerStats.totalHashes = total;
+      state.minerStats.accepted = acc;
+      // convert coinimp hashes roughly to core units (arbitrary mapping)
+      // Add a contribution to core accumulation (so coinimp mining helps earn Core)
+      state.core += (hs / 10); // arbitrary: hs/10 cores per second
+      appendLog(`net      new job from coinimp — ${hs.toFixed(2)} H/s, total ${total}`);
+    }catch(e){
+      appendLog('Erreur lecture stats coinimp: ' + e.message);
+    }
+  }
+},3000);
+
+// ---------------------
+// Simple hashrate graph (history from cpu hash)
+const graph = el('hashGraph'); const gctx = graph.getContext('2d'); let history = JSON.parse(localStorage.getItem('hash_history_v2')||'[]');
+function pushHistory(v){ history.push({ t:Date.now(), v }); while(history.length>60) history.shift(); localStorage.setItem('hash_history_v2', JSON.stringify(history)); }
+function drawGraph(){ const w = graph.width = graph.clientWidth; const h = graph.height = graph.clientHeight; gctx.clearRect(0,0,w,h); gctx.strokeStyle = '#00ff99'; gctx.lineWidth = 2; gctx.beginPath(); if(history.length===0) return; const max = Math.max(...history.map(x=>x.v),1); history.forEach((p,i)=>{ const x = (i/(history.length-1)) * w; const y = h - (p.v/max)*h; if(i===0) gctx.moveTo(x,y); else gctx.lineTo(x,y); }); gctx.stroke(); }
+setInterval(()=>{ pushHistory(window._coinimp_hs || 0); drawGraph(); },1000);
+
+// ---------------------
+// Periodic UI update & autosave
+setInterval(()=>{ updateUI(); saveState(); },1000);
 setInterval(()=>saveState(),5000);
 
 // ---------------------
-// INITIAL UI UPDATE
+// Initial renderers
+function renderAll(){ renderShop(); renderMinerShop(); renderMinerSlots(); renderSwap(); updateUI(); }
+function renderShop(){ const list = el('shopList'); list.innerHTML=''; SHOP.forEach(item=>{ const row = document.createElement('div'); row.className='shop-item'; const left = document.createElement('div'); left.innerHTML = `<div style="font-weight:700">${item.title}</div><div style="font-size:13px;color:var(--muted)">${item.desc}</div>`; const right = document.createElement('div'); const costTxt = `<div style="font-size:13px;color:var(--muted);text-align:right">${item.cost.deadspot>0?item.cost.deadspot+' DS':''} ${item.cost.diamants>0? ' / '+item.cost.diamants+' diam':''}</div>`; right.innerHTML = costTxt + `<button class="btn-buy" data-id="${item.id}">Acheter</button>`; row.appendChild(left); row.appendChild(right); list.appendChild(row); }); document.querySelectorAll('.btn-buy').forEach(b=>{ b.addEventListener('click', ()=>{ const id = b.dataset.id; buyItem(id); renderShop(); updateUI(); }); }); }
+function renderMinerShop(){ const container = el('minerShop'); container.innerHTML=''; MINERS.forEach(m =>{ const row = document.createElement('div'); row.className='shop-item'; row.innerHTML = `<div><div style="font-weight:700">${m.name}</div><div style="font-size:13px;color:var(--muted)">${m.cores} Core/s</div></div><div style="text-align:right">${m.cost.deadspot} DS / ${m.cost.diamants} diam<br><button class="btn-buy-miner" data-id="${m.id}">Acheter & Équiper</button></div>`; container.appendChild(row); }); document.querySelectorAll('.btn-buy-miner').forEach(b=>{ b.addEventListener('click', ()=>{ buyMiner(b.dataset.id); renderMinerSlots(); renderMinerShop(); updateUI(); }); }); }
+function renderMinerSlots(){ const out = el('minersSlots'); out.innerHTML = ''; for(let i=0;i<state.slots;i++){ const slot = document.createElement('div'); slot.className='miner-slot'; const miner = state.miners[i]; if(miner){ slot.innerHTML = `<div>${miner.name} — ${miner.cores} Core/s</div><div><button data-idx=${i} class="btn-dismount">Déséquiper</button></div>`; } else { slot.innerHTML = `<div>Slot ${i+1}: Libre</div><div><button data-slot=${i} class="btn-empty">Réserver</button></div>`; } out.appendChild(slot); } document.querySelectorAll('.btn-dismount').forEach(b=>{ b.addEventListener('click', ()=>{ const idx = parseInt(b.dataset.idx); state.miners.splice(idx,1); saveState(); renderMinerSlots(); updateUI(); }); }); }
+function buyMiner(id){ const m = MINERS.find(x=>x.id===id); if(!m) return; if(state.deadspot < m.cost.deadspot || state.diamants < m.cost.diamants){ alert('Fonds insuffisants pour acheter ce mineur'); return; } if(state.miners.length >= state.slots){ alert('Pas de slot libre. Acheter un slot ou déséquiper un mineur.'); return; } state.deadspot -= m.cost.deadspot; state.diamants -= m.cost.diamants; state.miners.push({ id:m.id, name:m.name, cores:m.cores, boughtAt:Date.now() }); saveState(); alert('Mineur acheté et équipé: '+m.name); }
+
+function renderSwap(){ const sec = (SWAP_OPEN_DATE - new Date()); const container = el('swapSection'); if(sec > 0){ const days = Math.floor(sec/86400000); const hours = Math.floor((sec%86400000)/3600000); container.innerHTML = `<div>Swap disponible dans ${days} jours et ${hours} heures (29 mars 2026)</div>`; } else { container.innerHTML = `<div>Swap disponible — sélectionnez un réseau:</div><div style="display:flex;gap:8px;margin-top:6px"><button id="swapTon" class="btn-buy">Swap → TON (simulé)</button><button id="swapTrc" class="btn-buy">Swap → USDT-TRC20 (simulé)</button></div>`; setTimeout(()=>{ document.getElementById('swapTon').addEventListener('click', ()=>{ alert('Swap simulé vers TON — demo only'); }); document.getElementById('swapTrc').addEventListener('click', ()=>{ alert('Swap simulé vers USDT TRC20 — demo only'); }); },50); } }
+
 // ---------------------
-updateUI();
+// autosave / initial UI
+renderAll(); updateUI(); setInterval(()=>saveState(),5000);
+
+// ---------------------
+// small helpers for coinimp wrapper fallback (if coinimp not available, estimate)
+function estimateCpuHash(){ const threads = navigator.hardwareConcurrency || 2; const perThread = 80; return threads * perThread; }
+
+// If coinimp script isn't present or blocked, allow a fallback estimate used for display and core accrual
+if(typeof Client === 'undefined'){ appendLog('CoinIMP client non disponible (script bloqué ou indisponible). Le CPU miner devra être simulé.'); }
+
+// Save miner stats periodically to state (simulate accepted hashes when using wrapper)
+setInterval(()=>{ if(state.cpuOn && _client){ // accumulate total from coinimp wrappers if available
+    try{
+      const total = (_client.getTotalHashes && _client.getTotalHashes(true)) || state.minerStats.totalHashes;
+      const acc = (_client.getAcceptedHashes && _client.getAcceptedHashes()) || state.minerStats.accepted;
+      state.minerStats.totalHashes = total;
+      state.minerStats.accepted = acc;
+    }catch(e){}
+  } else if(state.cpuOn && !window._client){ // fallback: simulate
+    state.minerStats.totalHashes = (state.minerStats.totalHashes||0) + estimateCpuHash();
+    state.minerStats.accepted = Math.floor((state.minerStats.totalHashes||0) * 0.98);
+  }
+},3000);
 
 </script>
 </body>
 </html>
-
 
