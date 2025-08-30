@@ -75,7 +75,9 @@ a:hover { text-decoration:underline; }
 </div>
 
 <script>
-// CONFIG SUPABASE
+// ============================
+// CONFIG SUPABASE (Front-end)
+// ============================
 const SUPABASE_URL = "https://wbavwtwslofcrpeuyqak.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_Q_Jm1qse1MuBwINNgm7QuQ_sqQG-WfA";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -83,25 +85,40 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // STATE INITIAL
 let state = { deadspot:0, xp:0, level:1, energy:1000, energyMax:1000 };
 
-// LOAD USER STATE
+// ============================
+// LOAD / SAVE via BACK-END
+// ============================
 async function loadUserState() {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if(!session) return;
   const userId = session.user.id;
-  const { data } = await supabaseClient.from("user_state").select("*").eq("id", userId).single();
-  if(data) state = data;
+
+  // Appel API sécurisée back-end
+  const res = await fetch('http://localhost:3000/api/loadUserState', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify({ userId })
+  });
+  const result = await res.json();
+  if(result.state) state = result.state;
   updateUI();
 }
 
-// SAVE USER STATE
 async function saveUserState() {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if(!session) return;
   const userId = session.user.id;
-  await supabaseClient.from("user_state").upsert({ id:userId, ...state });
+
+  await fetch('http://localhost:3000/api/saveUserState', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify({ userId, state })
+  });
 }
 
+// ============================
 // UPDATE UI
+// ============================
 function updateUI(){
   document.getElementById("deadspot").innerText = state.deadspot.toFixed(4);
   document.getElementById("xp").innerText = state.xp.toFixed(2);
@@ -111,12 +128,13 @@ function updateUI(){
   document.getElementById("energy-fill").style.width = (state.energy/state.energyMax*100)+"%";
 }
 
+// ============================
 // SIGN UP
+// ============================
 document.getElementById("btnSignUp").onclick = async () => {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
 
-  // hCaptcha verification
   const captchaResponse = hcaptcha.getResponse();
   if(!captchaResponse) {
     alert("Veuillez valider le captcha");
@@ -127,7 +145,9 @@ document.getElementById("btnSignUp").onclick = async () => {
   if(error) alert(error.message); else alert("Inscription réussie !");
 }
 
+// ============================
 // SIGN IN
+// ============================
 document.getElementById("btnSignIn").onclick = async () => {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
@@ -141,7 +161,9 @@ document.getElementById("btnSignIn").onclick = async () => {
   }
 }
 
+// ============================
 // CLICK TO EARN
+// ============================
 document.getElementById("clickBtn").onclick = () => {
   if(state.energy <=0) return alert("Pas assez d'énergie");
   state.energy--;
@@ -151,7 +173,9 @@ document.getElementById("clickBtn").onclick = () => {
   updateUI(); saveUserState();
 }
 
+// ============================
 // AUTO LOGIN IF SESSION
+// ============================
 window.addEventListener("load", async () => {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if(session){
@@ -163,3 +187,4 @@ window.addEventListener("load", async () => {
 </script>
 </body>
 </html>
+
