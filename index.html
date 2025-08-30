@@ -4,39 +4,30 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rewards Airdrop Mining</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 body { font-family: Arial, sans-serif; background:#0a0a0a; color:#e0e0e0; margin:0; text-align:center; }
-#login-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display:flex; align-items:center; justify-content:center; z-index:9999; }
-#login-box { background:#111; padding:25px; border-radius:12px; width:320px; max-width:90%; text-align:center; overflow:visible; box-shadow: 0 0 20px #00ff99aa; }
-#login-box h2 { color:white; margin-bottom:15px; }
-#login-box input { width:90%; padding:8px; margin:5px 0; border-radius:6px; border:none; }
 button { padding:10px 20px; margin:5px; border:none; border-radius:8px; cursor:pointer; background:#00ff99; color:#000; font-weight:bold; transition: transform 0.1s; }
 button:hover { transform: scale(1.05); }
-#app { display:none; padding:20px; }
 .energy-bar { width:100%; background:#333; border-radius:12px; overflow:hidden; margin:10px 0; }
 .energy-fill { height:20px; background:lime; width:100%; transition:width 0.3s; animation:flash 2s infinite; }
 @keyframes flash { 0%{opacity:1} 50%{opacity:0.6} 100%{opacity:1} }
 #stats { margin:20px; text-align:left; display:inline-block; }
 a { color:yellow; text-decoration:none; } a:hover { text-decoration:underline; }
 #coming-soon { margin-top:20px; padding:15px; background:#222; border-radius:12px; color:#ffcc00; }
-
-/* Section options retractable */
 #settings { margin-top:20px; text-align:left; width:90%; max-width:500px; margin-left:auto; margin-right:auto; }
 #settings button { width:100%; background:#222; color:yellow; text-align:left; }
 #settings-content { display:none; background:#111; padding:10px; border-radius:8px; margin-top:5px; }
 .setting-item { margin:5px 0; }
+#identity { margin:20px; padding:10px; background:#111; border-radius:10px; box-shadow:0 0 10px #00ff99aa; }
 </style>
 </head>
 <body>
 
-<!-- LOGIN / INSCRIPTION -->
-<div id="login-overlay">
-  <div id="login-box">
-    <h2>Connexion par numéro</h2>
-    <input type="tel" id="phone" placeholder="Numéro de téléphone"><br><br>
-    <button id="btnSignIn">Se connecter</button>
-  </div>
+<!-- IDENTIFICATION PAR IP -->
+<div id="identity">
+  <h2>Identification client</h2>
+  <p><b>Votre IP :</b> <span id="clientIP">Chargement...</span></p>
+  <p><b>Votre Username :</b> <span id="username"></span></p>
 </div>
 
 <!-- APP -->
@@ -88,42 +79,34 @@ a { color:yellow; text-decoration:none; } a:hover { text-decoration:underline; }
 </div>
 
 <script>
-// ============================
-// CONFIG SUPABASE
-// ============================
-const SUPABASE_URL = "https://wbavwtwslofcrpeuyqak.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_Q_Jm1qse1MuBwINNgm7QuQ_sqQG-WfA";
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
 // STATE INITIAL
 let state = { deadspot:0, xp:0, level:1, energy:1000, energyMax:1000, bonus:0, vip:0 };
 let deadspotMultiplier = 1;
 
 // ============================
-// LOAD / SAVE via BACK-END
+// IDENTIFICATION IP + USERNAME
 // ============================
-async function loadUserState() {
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  if(!session) return;
-  const userId = session.user.id;
-  const res = await fetch('http://localhost:3000/api/loadUserState', {
-    method: 'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ userId })
-  });
-  const result = await res.json();
-  if(result.state) state = result.state;
-  updateUI();
+async function getClientIP(){
+  try {
+    const res = await fetch("https://api64.ipify.org?format=json");
+    const data = await res.json();
+    document.getElementById("clientIP").innerText = data.ip;
+  } catch(e){
+    document.getElementById("clientIP").innerText = "Non détectée";
+  }
 }
 
-async function saveUserState() {
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  if(!session) return;
-  const userId = session.user.id;
-  await fetch('http://localhost:3000/api/saveUserState', {
-    method: 'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ userId, state })
-  });
+function getOrCreateUsername(){
+  let username = localStorage.getItem("username");
+  if(!username){
+    username = "User_" + Math.floor(Math.random()*100000);
+    localStorage.setItem("username", username);
+  }
+  document.getElementById("username").innerText = username;
 }
+
+getClientIP();
+getOrCreateUsername();
 
 // ============================
 // UPDATE UI
@@ -138,20 +121,6 @@ function updateUI(){
   document.getElementById("vip").innerText = state.vip.toFixed(1) + "%";
   document.getElementById("energy-fill").style.width = (state.energy/state.energyMax*100)+"%";
   document.getElementById("clickBtn").disabled = state.energy <= 0;
-}
-
-// ============================
-// LOGIN PAR TÉLÉPHONE
-// ============================
-document.getElementById("btnSignIn").onclick = async () => {
-  const phone = document.getElementById("phone").value;
-  if(!phone) return alert("Veuillez entrer votre numéro de téléphone");
-
-  // Ici on peut utiliser Supabase OTP login ou juste simuler login local dev
-  // Exemple: on considère phone valide pour dev
-  document.getElementById("login-overlay").style.display="none";
-  document.getElementById("app").style.display="block";
-  await loadUserState();
 }
 
 // ============================
@@ -171,7 +140,6 @@ document.getElementById("clickBtn").onclick = () => {
   while(state.xp > (15*Math.pow(1.27,state.level-1))) state.level++;
 
   updateUI();
-  saveUserState();
 }
 
 // ============================
@@ -183,7 +151,6 @@ setInterval(() => {
   }
   state.vip = Math.min(100, state.vip + 0.05);
   updateUI();
-  saveUserState();
 }, 5000);
 
 // ============================
@@ -205,6 +172,9 @@ function setDeadspotMultiplier() {
   if(val>0) deadspotMultiplier = val;
   updateUI();
 }
+
+updateUI();
 </script>
 </body>
 </html>
+
