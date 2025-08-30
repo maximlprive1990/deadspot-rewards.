@@ -31,7 +31,8 @@ a { color:yellow; text-decoration:none; } a:hover { text-decoration:underline; }
     <h2>Connexion</h2>
     <input type="email" id="email" placeholder="Email"><br>
     <input type="password" id="password" placeholder="Mot de passe"><br><br>
-    <div class="h-captcha" data-sitekey="e90edc1a-505c-4e72-917e-456850c8a23e" data-theme="dark" data-size="compact"></div>
+    <!-- HCAPTCHA (désactivé pour dev local) -->
+    <!-- <div class="h-captcha" data-sitekey="e90edc1a-505c-4e72-917e-456850c8a23e" data-theme="dark" data-size="compact"></div> -->
     <br>
     <button id="btnSignUp">S'inscrire</button>
     <button id="btnSignIn">Se connecter</button>
@@ -120,11 +121,14 @@ function updateUI(){
 document.getElementById("btnSignUp").onclick = async () => {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
-  const captchaResponse = hcaptcha.getResponse();
-  if(!captchaResponse) { alert("Veuillez valider le captcha"); return; }
+
+  // ======= CAPTCHA DÉSACTIVÉ POUR DEV LOCAL =======
+  // const captchaResponse = hcaptcha.getResponse();
+  // if(!captchaResponse) { alert("Veuillez valider le captcha"); return; }
+
   const { error } = await supabaseClient.auth.signUp({ email, password });
   if(error) alert(error.message);
-  else alert("Inscription réussie !");
+  else alert("Inscription réussie ! (captcha bypassé pour dev)");
 }
 
 // ============================
@@ -133,6 +137,10 @@ document.getElementById("btnSignUp").onclick = async () => {
 document.getElementById("btnSignIn").onclick = async () => {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
+
+  // ======= CAPTCHA DÉSACTIVÉ POUR DEV LOCAL =======
+  // normalement ici aussi tu pourrais vérifier hcaptcha.getResponse()
+  
   const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
   if(error) alert(error.message);
   else {
@@ -149,20 +157,14 @@ document.getElementById("clickBtn").onclick = () => {
   if(state.energy <=0) return alert("Pas assez d'énergie");
   state.energy--;
 
-  // Deadspot aléatoire 0.0001 - 0.278
   const gainDeadspot = Math.random() * (0.278 - 0.0001) + 0.0001;
   state.deadspot += gainDeadspot;
 
-  // XP aléatoire 35 - 1875
   state.xp += Math.floor(Math.random() * (1875 - 35 + 1) + 35);
 
-  // Bonus accumulé (5% de Deadspot gagné)
   state.bonus += gainDeadspot * 0.05;
-
-  // VIP progress (exemple: 0 à 100% basé sur XP)
   state.vip = Math.min(100, state.xp / 10000 * 100);
 
-  // Level up
   while(state.xp > (15*Math.pow(1.27,state.level-1))) state.level++;
 
   updateUI();
@@ -173,16 +175,13 @@ document.getElementById("clickBtn").onclick = () => {
 // AUTO ENERGY RECHARGE & VIP BOOST
 // ============================
 setInterval(() => {
-  // Recharge 5 énergie toutes les 5 secondes
   if(state.energy < state.energyMax) {
     state.energy = Math.min(state.energy + 5, state.energyMax);
   }
-  // VIP progress boost passif
   state.vip = Math.min(100, state.vip + 0.05);
-
   updateUI();
   saveUserState();
-}, 5000); // 5 sec
+}, 5000);
 
 // ============================
 // AUTO LOGIN IF SESSION
@@ -198,4 +197,3 @@ window.addEventListener("load", async () => {
 </script>
 </body>
 </html>
-
