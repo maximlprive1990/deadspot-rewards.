@@ -17,8 +17,6 @@
     .energy-fill { height:20px; background:lime; width:100%; transition:width 0.3s; animation:flash 2s infinite; }
     @keyframes flash { 0%{opacity:1} 50%{opacity:0.6} 100%{opacity:1} }
     button { padding:10px 20px; margin:5px; border:none; border-radius:8px; cursor:pointer; background:#444; color:#fff; }
-    .rack { border:1px solid #555; padding:10px; margin:5px; min-height:60px; border-radius:10px; background:#111; }
-    .miner { border:1px solid #777; margin:5px; padding:5px; border-radius:8px; background:#222; }
     #bonus-banner { color:yellow; font-weight:bold; animation:blink 1s infinite; margin:10px 0; }
     @keyframes blink { 50% { opacity:0; } }
     #stats { margin:10px 0; }
@@ -26,7 +24,7 @@
 </head>
 <body>
 
-<!-- 🔐 Overlay Login -->
+<!-- Login Overlay -->
 <div id="login-overlay">
   <div id="login-box">
     <h2>Connexion</h2>
@@ -37,7 +35,7 @@
   </div>
 </div>
 
-<!-- 🌍 Jeu -->
+<!-- App -->
 <div id="app">
   <h1>Rewards Airdrop Mining</h1>
 
@@ -58,20 +56,10 @@
   <!-- Clicker -->
   <button id="clickBtn">CLICK to Earn</button>
 
-  <!-- Bonus premier dépôt -->
+  <!-- Bonus -->
   <div id="bonus-banner">
     🎁 Premier achat: +1764% Deadspot, x4 Clicks, +150 GH/s gratuit!
   </div>
-
-  <!-- Racks & Mineurs -->
-  <h2>Mes Racks</h2>
-  <div id="racks"></div>
-
-  <h2>Inventaire</h2>
-  <div id="inventory"></div>
-
-  <h2>Boutique</h2>
-  <div id="shop"></div>
 
   <!-- Swap -->
   <h2>Swap Crypto</h2>
@@ -79,11 +67,6 @@
   <select id="swapCurrency"><option>BTC</option><option>ETH</option><option>TRX</option></select>
   <button id="swapBtn">Swap</button>
   <p id="swapResult"></p>
-
-  <!-- Mining -->
-  <h2>Mining Live</h2>
-  <p>Hashrate: <span id="hashrate">0</span> H/s</p>
-  <canvas id="hashChart" width="400" height="100" style="background:#111;"></canvas>
 </div>
 
 <script>
@@ -93,14 +76,14 @@
   const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
   // ---- User state ----
-  let state = { deadspot:0, diamonds:0, xp:0, level:1, energy:1000, energyMax:1000, racks:[], inventory:[] }
+  let state = { deadspot:0, diamonds:0, xp:0, level:1, energy:1000, energyMax:1000 }
 
   async function loadUserState() {
     try {
       const { data: { session } } = await supabaseClient.auth.getSession()
       if (!session) return
       const userId = session.user.id
-      const { data, error } = await supabaseClient
+      const { data } = await supabaseClient
         .from("user_state")
         .select("*")
         .eq("id", userId)
@@ -130,15 +113,15 @@
   }
 
   // ---- Auth ----
-  document.getElementById("btnSignUp").addEventListener("click", async () => {
+  document.getElementById("btnSignUp").onclick = async () => {
     const email = document.getElementById("email").value
     const password = document.getElementById("password").value
     const { error } = await supabaseClient.auth.signUp({ email, password })
     if(error) alert(error.message)
     else alert("Inscription réussie ! Vérifiez votre email")
-  })
+  }
 
-  document.getElementById("btnSignIn").addEventListener("click", async () => {
+  document.getElementById("btnSignIn").onclick = async () => {
     const email = document.getElementById("email").value
     const password = document.getElementById("password").value
     const { error } = await supabaseClient.auth.signInWithPassword({ email, password })
@@ -148,7 +131,7 @@
       document.getElementById("app").style.display="block"
       await loadUserState()
     }
-  })
+  }
 
   // ---- Clicker ----
   document.getElementById("clickBtn").addEventListener("click", () => {
@@ -157,9 +140,7 @@
     const gain = 0.0001 + Math.random()*0.27
     state.deadspot += gain
     state.xp += 0.175
-    if(state.xp > (15 * Math.pow(1.27, state.level-1))) {
-      state.level++; state.diamonds += 1
-    }
+    if(state.xp > (15 * Math.pow(1.27, state.level-1))) { state.level++; state.diamonds++ }
     updateUI(); saveUserState()
   })
 
@@ -174,14 +155,12 @@
   })
 
   // ---- Swap placeholder ----
-  document.getElementById("swapBtn").addEventListener("click", () => {
+  document.getElementById("swapBtn").onclick = () => {
     const amount = parseFloat(document.getElementById("swapAmount").value)
     const currency = document.getElementById("swapCurrency").value
     if(!amount || amount <= 0) return alert("Montant invalide")
     document.getElementById("swapResult").innerText = `Swappé ${amount} vers ${currency} (simulation)`
-  })
+  }
 </script>
-
 </body>
 </html>
-
